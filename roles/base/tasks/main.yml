@@ -1,0 +1,51 @@
+---
+- name: Hostname
+  ansible.builtin.hostname:
+    name: "{{ vps_hostname }}"
+
+- name: Timezone
+  community.general.timezone:
+    name: "{{ vps_timezone }}"
+
+- name: Paquets de base (dépôts officiels uniquement)
+  ansible.builtin.dnf:
+    name: "{{ base_packages }}"
+    state: present
+
+- name: Chrony activé
+  ansible.builtin.systemd:
+    name: chronyd
+    state: started
+    enabled: true
+
+- name: Journald persistant
+  community.general.ini_file:
+    path: /etc/systemd/journald.conf.d/persistent.conf
+    section: Journal
+    option: Storage
+    value: persistent
+    mode: "0644"
+  notify: Restart journald
+
+- name: Mises à jour automatiques — plugin dnf
+  ansible.builtin.dnf:
+    name: "{{ dnf_automatic_package }}"
+    state: present
+
+- name: Mises à jour automatiques — appliquer les correctifs de sécurité
+  community.general.ini_file:
+    path: /etc/dnf/automatic.conf
+    section: commands
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    mode: "0644"
+  loop:
+    - {option: upgrade_type, value: security}
+    - {option: apply_updates, value: "yes"}
+    - {option: reboot, value: when-needed}
+
+- name: Mises à jour automatiques — timer activé
+  ansible.builtin.systemd:
+    name: "{{ dnf_automatic_timer }}"
+    state: started
+    enabled: true

@@ -1,0 +1,48 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer l'outillage
+        run: pip install ansible-core ansible-lint yamllint
+
+      - name: Installer les collections
+        run: ansible-galaxy collection install -r requirements.yml
+
+      # Les vaults sont chiffrés et exclus du lint ; ansible.cfg référence
+      # néanmoins un fichier de mot de passe, absent en CI par conception.
+      - name: Fichier vault factice (jamais utilisé pour déchiffrer)
+        run: echo ci-placeholder > .vault-pass
+
+      - name: ansible-lint (profil production)
+        run: ansible-lint
+
+      - name: yamllint
+        run: yamllint .
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # scanne tout l'historique
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

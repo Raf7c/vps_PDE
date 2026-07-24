@@ -1,0 +1,10 @@
+# Configuration gitleaks : règles par défaut + tolérance pour les fichiers
+# volontairement chiffrés (blobs ansible-vault, haute entropie sans secret en clair).
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''inventories/prod/group_vars/all/vault\.yml''',
+  '''inventories/prod/group_vars/all/private\.yml''',
+]

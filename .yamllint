@@ -1,0 +1,22 @@
+---
+extends: default
+
+rules:
+  line-length:
+    max: 130
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false   # `on:` des workflows GitHub Actions
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  braces:
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
+ignore: |
+  .git/
+  inventories/prod/group_vars/all/vault.yml
+  inventories/prod/group_vars/all/private.yml

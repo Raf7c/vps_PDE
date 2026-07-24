@@ -1,0 +1,23 @@
+---
+# MODÈLE de private.yml. Copier, remplir, puis CHIFFRER avant tout commit :
+#   cp private.yml.example private.yml
+#   $EDITOR private.yml
+#   ansible-vault encrypt private.yml     (édition ultérieure : just private-edit)
+
+# Utilisateur de travail : AUCUN sudo, aucune élévation possible
+vps_user: dev
+
+# Une clé publique PAR machine cliente → révocation fine
+vps_user_pubkeys: []
+#  - "ssh-ed25519 AAAA... dev@laptop"
+#  - "ssh-ed25519 AAAA... dev@poste"
+
+# Clés autorisées pour le compte d'administration (machine de contrôle Ansible)
+vps_admin_pubkeys: []
+#  - "ssh-ed25519 AAAA... dev@laptop"
+
+# Hostname SSH du tunnel (ingress Cloudflare : ssh://localhost:22)
+cloudflare_ssh_hostname: ssh.example.com
+
+# Clé privée utilisée par Ansible (machine de contrôle)
+ansible_ssh_private_key_file: ~/.ssh/id_ed25519_laptop

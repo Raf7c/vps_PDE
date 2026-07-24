@@ -1,0 +1,112 @@
+---
+# ── Firewall : zéro port côté Internet ─────────────────────────
+# Tout arrive par le tunnel cloudflared (connexion SORTANTE) : rien à ouvrir.
+- name: Firewalld démarré
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Zone public → DROP (aucun service, aucun port)
+  ansible.posix.firewalld:
+    zone: public
+    target: DROP
+    state: present
+    permanent: true
+  notify: Reload firewalld
+
+- name: Retirer ssh et dhcpv6-client de la zone public
+  ansible.posix.firewalld:
+    zone: public
+    service: "{{ item }}"
+    state: disabled
+    permanent: true
+  loop:
+    - ssh
+    - dhcpv6-client
+  notify: Reload firewalld
+
+- name: Flush handlers (firewall actif avant de toucher sshd)
+  ansible.builtin.meta: flush_handlers
+
+# ── SSHD : n'écoute que sur localhost ──────────────────────────
+# cloudflared proxifie vers localhost:22 — sshd est injoignable
+# autrement, même depuis le réseau local du provider.
+- name: Durcissement sshd (drop-in)
+  ansible.builtin.template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/90-hardening.conf
+    mode: "0600"
+    validate: sshd -t -f %s
+  notify: Restart sshd
+
+# ── Sysctl réseau / kernel ─────────────────────────────────────
+- name: Durcissement sysctl
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-hardening.conf
+  loop:
+    - {name: net.ipv4.conf.all.rp_filter, value: "1"}
+    - {name: net.ipv4.conf.all.accept_redirects, value: "0"}
+    - {name: net.ipv6.conf.all.accept_redirects, value: "0"}
+    - {name: net.ipv4.conf.all.send_redirects, value: "0"}
+    - {name: net.ipv4.conf.all.accept_source_route, value: "0"}
+    - {name: net.ipv6.conf.all.accept_source_route, value: "0"}
+    - {name: net.ipv4.icmp_echo_ignore_broadcasts, value: "1"}
+    - {name: kernel.yama.ptrace_scope, value: "1"}
+    - {name: kernel.kptr_restrict, value: "1"}
+    - {name: kernel.dmesg_restrict, value: "1"}
+
+# ── SELinux & audit ────────────────────────────────────────────
+- name: SELinux enforcing
+  ansible.posix.selinux:
+    policy: targeted
+    state: enforcing
+
+- name: Règles auditd
+  ansible.builtin.copy:
+    src: audit.rules
+    dest: /etc/audit/rules.d/hardening.rules
+    mode: "0640"
+  notify: Restart auditd
+
+- name: Auditd activé
+  ansible.builtin.systemd:
+    name: auditd
+    state: started
+    enabled: true
+
+# ── Comptes ────────────────────────────────────────────────────
+- name: Verrouiller le mot de passe root
+  ansible.builtin.user:
+    name: root
+    password_lock: true
+
+# Le compte cloud peut détenir des sessions résiduelles (dont la connexion
+# Ansible du play 1 du bootstrap, gardée ouverte par ControlPersist) qui
+# bloqueraient userdel : on les termine d'abord. On n'est jamais connecté
+# via ce compte ici (bootstrap play 2 et provision tournent en {{ vps_admin }}).
+- name: Terminer les sessions des comptes cloud
+  ansible.builtin.command: loginctl terminate-user {{ item }}
+  loop: "{{ cloud_users_to_remove | default([]) | reject('eq', vps_user) | list }}"
+  failed_when: false
+  changed_when: false
+
+- name: Supprimer les comptes cloud du provider
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: true
+  loop: "{{ cloud_users_to_remove | default([]) | reject('eq', vps_user) | list }}"
+
+- name: Umask 027 par défaut
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^UMASK\s'
+    line: "UMASK           027"
+
+# Applique immédiatement les restarts notifiés (sshd…) : sans ça, un échec
+# dans un rôle suivant annulerait les handlers de fin de play.
+- name: Flush handlers (fin hardening)
+  ansible.builtin.meta: flush_handlers

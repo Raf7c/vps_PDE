@@ -1,0 +1,6 @@
+---
+# ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: ansible.posix      # firewalld, sysctl, authorized_key
+  - name: community.general  # ini_file, timezone
+  - name: community.sops     # déchiffrement transparent des *.sops.yml

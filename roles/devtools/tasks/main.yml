@@ -1,0 +1,10 @@
+---
+- name: Outils de dev (dépôts officiels uniquement)
+  ansible.builtin.dnf:
+    name: "{{ devtools_packages }}"
+    state: present
+
+- name: Linger (services user + toolbox survivent à la déconnexion) pour {{ vps_user }}
+  ansible.builtin.command: loginctl enable-linger {{ vps_user }}
+  args:
+    creates: /var/lib/systemd/linger/{{ vps_user }}

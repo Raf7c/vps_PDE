@@ -1,0 +1,14 @@
+---
+# État complet du VPS. S'exécute via le tunnel : il suppose un bootstrap déjà fait.
+
+- name: Provisionner le VPS de dev
+  hosts: vps
+  become: true
+
+  roles:
+    - base
+    - cloudflared
+    - hardening
+    - devtools
+    - role: backup
+      when: vault_restic_repository | default('') | length > 0

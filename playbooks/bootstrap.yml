@@ -1,0 +1,93 @@
+---
+# S'exécute UNE SEULE FOIS, via l'IP publique : c'est la seule fenêtre où le VPS
+# est exposé. Deux plays : le compte cloud du provider ne sert qu'à créer admin
+# (play 1), puis tout le reste s'exécute en admin (play 2), y compris la
+# suppression du compte cloud en fin de run. Inventaire ad-hoc, d'où le
+# chargement explicite des group_vars via vars_files.
+
+- name: Bootstrap 1/2, créer le compte d'administration (via le compte cloud)
+  hosts: all
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../inventories/prod/group_vars/all/vars.yml
+    - ../inventories/prod/group_vars/all/private.yml
+    - ../inventories/prod/group_vars/all/vault.yml
+
+  tasks:
+    - name: Vérifier que les clés publiques sont définies
+      ansible.builtin.assert:
+        that:
+          - vps_user_pubkeys | length > 0
+          - vps_admin_pubkeys | length > 0
+        fail_msg: "Renseigner vps_user_pubkeys et vps_admin_pubkeys (just private-edit)."
+
+    - name: Vérifier que le mot de passe admin est défini dans le vault
+      ansible.builtin.assert:
+        that:
+          - vault_vps_admin_password is defined
+          - vault_vps_admin_password != 'CHANGEME'
+          - vault_vps_admin_password | length >= 12
+        fail_msg: "Définir vault_vps_admin_password (≥ 12 caractères) via `just vault-edit`."
+      no_log: true
+
+    - name: Créer le compte d'administration (wheel, sudo avec mdp) {{ vps_admin }}
+      ansible.builtin.user:
+        name: "{{ vps_admin }}"
+        groups: wheel
+        append: true
+        shell: /bin/bash
+        # Mot de passe posé UNIQUEMENT à la création (hash sha512).
+        # Sert pour sudo (BECOME) et pour la console de secours du provider.
+        password: "{{ vault_vps_admin_password | password_hash('sha512') }}"
+        update_password: on_create
+      no_log: true
+
+    - name: Déployer les clés SSH de {{ vps_admin }}
+      ansible.posix.authorized_key:
+        user: "{{ vps_admin }}"
+        key: "{{ item }}"
+        exclusive: false
+      loop: "{{ vps_admin_pubkeys }}"
+
+- name: Bootstrap 2/2, provisionner et fermer (via admin)
+  hosts: all
+  become: true
+  vars:
+    # Reconnexion avec le compte créé au play 1 : la variable ansible_user
+    # prime sur le -u de la ligne de commande.
+    ansible_user: "{{ vps_admin }}"
+  vars_files:
+    - ../inventories/prod/group_vars/all/vars.yml
+    - ../inventories/prod/group_vars/all/private.yml
+    - ../inventories/prod/group_vars/all/vault.yml
+
+  pre_tasks:
+    - name: Créer l'utilisateur de travail (AUCUN sudo) {{ vps_user }}
+      ansible.builtin.user:
+        name: "{{ vps_user }}"
+        shell: /usr/bin/zsh
+        password: "!"          # pas de mot de passe : ni login console, ni élévation
+
+    - name: Déployer les clés SSH de {{ vps_user }}
+      ansible.posix.authorized_key:
+        user: "{{ vps_user }}"
+        key: "{{ item }}"
+        exclusive: false
+      loop: "{{ vps_user_pubkeys }}"
+
+  roles:
+    - base
+    - cloudflared
+    - hardening
+
+  post_tasks:
+    - name: Prochaine étape
+      ansible.builtin.debug:
+        msg: >-
+          Bootstrap terminé. SSH n'écoute plus que sur localhost, joignable
+          uniquement via le tunnel ({{ cloudflare_ssh_hostname }}), et le compte
+          cloud du provider a été supprimé.
+          1) Vérifier le tunnel dans le dashboard Zero Trust (status: HEALTHY)
+          2) Se connecter :  ssh {{ vps_user }}@{{ cloudflare_ssh_hostname }}
+          3) just provision

@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# SSH n'écoute QUE sur localhost — accessible uniquement via le tunnel
+# cloudflared (+ policy Cloudflare Access). Invisible depuis Internet
+# comme depuis le réseau du provider.
+ListenAddress 127.0.0.1
+ListenAddress ::1
+
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+AuthenticationMethods publickey
+AllowUsers {{ vps_user }} {{ vps_admin }}
+MaxAuthTries 3
+MaxSessions 10
+LoginGraceTime 30
+ClientAliveInterval 300
+ClientAliveCountMax 2
+X11Forwarding no
+AllowAgentForwarding no
+PermitEmptyPasswords no

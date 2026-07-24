@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Sauvegarde restic (chiffree cote client, sortant uniquement)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/restic/restic.env
+ExecStart=/usr/bin/restic backup {{ restic_paths | join(' ') }} --exclude-file=/etc/restic/excludes.txt
+ExecStartPost=/usr/bin/restic forget --prune --keep-daily {{ restic_keep_daily }} --keep-weekly {{ restic_keep_weekly }} --keep-monthly {{ restic_keep_monthly }}
+# Sandboxing : même compromis, le process ne peut écrire que son cache.
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/root/.cache
+NoNewPrivileges=true

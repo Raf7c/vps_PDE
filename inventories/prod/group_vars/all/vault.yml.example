@@ -1,0 +1,16 @@
+---
+# MODÈLE de vault.yml, sans aucun vrai secret.
+# Création du vrai fichier (chiffré à la sauvegarde) : just vault-init
+# Édition ultérieure : just vault-edit
+
+# Token du tunnel Cloudflare (dashboard Zero Trust → Networks → Tunnels)
+vault_cloudflared_tunnel_token: "eyJhCHANGEME"
+
+# Mot de passe du compte admin (sudo/BECOME + console de secours du provider).
+# L'utilisateur de travail n'a NI sudo NI mot de passe.
+vault_vps_admin_password: "CHANGEME"
+
+# Backups restic (laisser vide pour désactiver le rôle backup)
+vault_restic_repository: ""      # ex: "b2:mon-bucket:vps"
+vault_restic_password: ""        # passphrase de chiffrement des sauvegardes
+vault_restic_env: {}             # ex: { B2_ACCOUNT_ID: "...", B2_ACCOUNT_KEY: "..." }

@@ -1,0 +1,70 @@
+---
+# SEULE exception à la règle « dépôts officiels Fedora » (voir docs/ARCHITECTURE.md §2.1) :
+# dépôt RPM signé GPG de Cloudflare, clé v2 (2025) épinglée ci-dessous.
+# Le tunnel est « remotely-managed » : créé dans le dashboard Zero Trust,
+# le VPS n'a besoin que du token (vault). Ingress configuré dans le dashboard :
+#   ssh.<domaine> → ssh://localhost:22   (+ policy Cloudflare Access)
+
+- name: Dépôt Cloudflare (signé GPG)
+  ansible.builtin.yum_repository:
+    name: cloudflared-stable
+    description: Cloudflared stable
+    baseurl: https://pkg.cloudflare.com/cloudflared/rpm
+    gpgcheck: true
+    gpgkey: https://pkg.cloudflare.com/cloudflare-public-v2.gpg
+
+- name: Installer cloudflared
+  ansible.builtin.dnf:
+    name: cloudflared
+    state: present
+
+- name: Répertoire de conf
+  ansible.builtin.file:
+    path: /etc/cloudflared
+    state: directory
+    mode: "0755"
+
+- name: Token du tunnel (depuis le vault)
+  ansible.builtin.copy:
+    content: "TUNNEL_TOKEN={{ vault_cloudflared_tunnel_token }}\n"
+    dest: /etc/cloudflared/env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart cloudflared
+
+- name: Unité systemd cloudflared (sandboxée)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/cloudflared.service
+    content: |
+      [Unit]
+      Description=Cloudflare Tunnel (connexion sortante uniquement)
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      EnvironmentFile=/etc/cloudflared/env
+      ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run
+      Restart=on-failure
+      RestartSec=5
+      User=cloudflared
+      DynamicUser=yes
+      NoNewPrivileges=true
+      PrivateTmp=true
+      ProtectSystem=strict
+      ProtectHome=true
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  notify:
+    - Daemon reload (cloudflared)
+    - Restart cloudflared
+
+- name: Service cloudflared activé
+  ansible.builtin.systemd:
+    name: cloudflared
+    state: started
+    enabled: true
+    daemon_reload: true
