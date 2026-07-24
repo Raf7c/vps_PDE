@@ -2,8 +2,11 @@
 # S'exécute UNE SEULE FOIS, via l'IP publique : c'est la seule fenêtre où le VPS
 # est exposé. Deux plays : le compte cloud du provider ne sert qu'à créer admin
 # (play 1), puis tout le reste s'exécute en admin (play 2), y compris la
-# suppression du compte cloud en fin de run. Inventaire ad-hoc, d'où le
-# chargement explicite des group_vars via vars_files.
+# suppression du compte cloud en fin de run.
+# Inventaire ad-hoc, d'où le chargement explicite des group_vars. Les fichiers
+# CHIFFRÉS passent par include_vars (exécuté au run) et non vars_files (évalué
+# au parse) : le --syntax-check de la CI, qui n'a pas le .vault-pass, ne doit
+# jamais tenter de les déchiffrer.
 
 - name: Bootstrap 1/2, créer le compte d'administration (via le compte cloud)
   hosts: all
@@ -11,10 +14,16 @@
   gather_facts: false
   vars_files:
     - ../inventories/prod/group_vars/all/vars.yml
-    - ../inventories/prod/group_vars/all/private.yml
-    - ../inventories/prod/group_vars/all/vault.yml
 
   tasks:
+    - name: Charger les variables chiffrées (identifiants + secrets)
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "{{ playbook_dir }}/../inventories/prod/group_vars/all/private.yml"
+        - "{{ playbook_dir }}/../inventories/prod/group_vars/all/vault.yml"
+      no_log: true
+
     - name: Vérifier que les clés publiques sont définies
       ansible.builtin.assert:
         that:
@@ -55,12 +64,11 @@
   become: true
   vars:
     # Reconnexion avec le compte créé au play 1 : la variable ansible_user
-    # prime sur le -u de la ligne de commande.
+    # prime sur le -u de la ligne de commande. Les variables chiffrées chargées
+    # au play 1 (include_vars) persistent, portées par l'hôte.
     ansible_user: "{{ vps_admin }}"
   vars_files:
     - ../inventories/prod/group_vars/all/vars.yml
-    - ../inventories/prod/group_vars/all/private.yml
-    - ../inventories/prod/group_vars/all/vault.yml
 
   pre_tasks:
     - name: Créer l'utilisateur de travail (AUCUN sudo) {{ vps_user }}
