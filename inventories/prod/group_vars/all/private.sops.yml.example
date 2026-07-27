@@ -1,8 +1,8 @@
 ---
-# MODÈLE de private.yml. Copier, remplir, puis CHIFFRER avant tout commit :
-#   cp private.yml.example private.yml
-#   $EDITOR private.yml
-#   ansible-vault encrypt private.yml     (édition ultérieure : just private-edit)
+# MODÈLE de private.sops.yml. Copier, remplir, puis CHIFFRER avant tout commit :
+#   cp private.sops.yml.example private.sops.yml
+#   $EDITOR private.sops.yml
+#   sops encrypt -i private.sops.yml     (édition ultérieure : just private-edit)
 
 # Utilisateur de travail : AUCUN sudo, aucune élévation possible
 vps_user: dev

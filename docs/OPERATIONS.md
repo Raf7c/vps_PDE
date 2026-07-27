@@ -17,7 +17,7 @@ git add -A && git commit && git push
 ```
 
 Le VPS est du bétail, pas un animal de compagnie : son état complet est le repo
-(+ le vault + private.yml + les backups).
+(secrets SOPS inclus) + les clés age + les backups.
 
 ## Paquets
 
@@ -42,21 +42,27 @@ logique via `vps_admin_pubkeys`.
 
 ## Secrets et valeurs identifiantes
 
-Deux fichiers chiffrés ansible-vault, committés, déchiffrés en mémoire à chaque run
-via `.vault-pass` (seul artefact hors git) :
+Deux fichiers **SOPS** committés, chiffrés (valeurs uniquement) vers des clés
+**age matérielles**. Aucun secret racine sur disque : le déchiffrement exige une
+YubiKey physique + PIN + toucher.
 
-- `vault.yml` : ce qui **donne un accès** (token du tunnel, mot de passe admin,
-  credentials backup) : `just vault-edit`.
-- `private.yml` : ce qui **identifie** le déploiement (utilisateur, clés publiques,
-  hostname du tunnel, chemin de la clé Ansible) : `just private-edit`.
+- `vault.sops.yml` : ce qui **donne un accès** (token du tunnel, mot de passe
+  admin, credentials backup) : `just vault-edit`.
+- `private.sops.yml` : ce qui **identifie** le déploiement (utilisateur, clés
+  publiques, hostname, chemin de la clé Ansible) : `just private-edit`.
+
+Trois destinataires (`.sops.yaml`), n'importe lequel déchiffre seul : YubiKey A
+(quotidienne), YubiKey B (secours, rangée ailleurs), clé age logicielle (secours
+ultime, clé privée dans le gestionnaire de mots de passe).
+
+Usage : `just unlock` en début de session (PIN une fois), puis toucher à chaque run.
 
 Rotations :
 
-- Édition : `just vault-edit` (le fichier reste chiffré sur disque et dans git).
-- Rotation du token du tunnel : dashboard Zero Trust → tunnel → rotate, nouveau
-  token dans le vault, `just provision`.
-- <details><summary>Rotation du mot de passe admin (le hash n'est posé qu'à la
-  création du compte)</summary>
+- Édition : `just vault-edit` / `just private-edit` (SOPS ouvre en clair, re-chiffre
+  à la sauvegarde).
+- Token du tunnel : dashboard Zero Trust → rotate → `just vault-edit` → `just provision`.
+- <details><summary>Mot de passe admin (le hash n'est posé qu'à la création du compte)</summary>
 
   `just vault-edit` avec la nouvelle valeur, puis :
 
@@ -66,8 +72,17 @@ Rotations :
   ```
 
   </details>
-- Le `.vault-pass` ne se régénère jamais sans re-chiffrer le vault
-  (`ansible-vault rekey`).
+- <details><summary>Remplacer une YubiKey perdue / ajouter un destinataire</summary>
+
+  Générer l'identité sur la nouvelle clé (`age-plugin-yubikey --generate`),
+  ajouter son recipient dans `.sops.yaml`, retirer l'ancien, puis réchiffrer
+  les fichiers vers les nouveaux destinataires :
+
+  ```bash
+  just sops-updatekeys
+  ```
+
+  </details>
 
 ## Backups
 
@@ -102,15 +117,17 @@ niveau par `just provision`.
 | Erreur 1033 dans le navigateur | Le tunnel n'a pas de connecteur : cloudflared arrêté côté VPS |
 | Clé SSH refusée | `journalctl -u sshd` côté VPS (via console) : shell manquant, `AllowUsers`, contexte SELinux (`restorecon -Rv /home/<user>/.ssh`) |
 | Tunnel définitivement mort | Console web du provider = accès de secours : login `admin` + mot de passe du vault |
-| Vault illisible | Recréer `.vault-pass` depuis le gestionnaire de mots de passe |
+| `Failed to decrypt YubiKey stanza` | PIN pas en cache : `just unlock` d'abord (contexte non-interactif ne peut pas le demander) |
+| YubiKey A et B perdues | Déchiffrer avec la clé age de secours (gestionnaire de mdp) : `SOPS_AGE_KEY=<clé> sops decrypt ...` |
 
 </details>
 
 ## Reconstruction (disaster recovery)
 
-Prérequis permanents : le repo et `.vault-pass` (sauvegardé hors repo, ex.
-gestionnaire de mots de passe) ; tout le reste, `private.yml` et `vault.yml`
-compris, est dans git, chiffré. Plus un dépôt restic si activé.
+Prérequis permanents : le repo (tout y est, `private.sops.yml` et `vault.sops.yml`
+chiffrés compris) + au moins une des clés age (YubiKey ou clé de secours du
+gestionnaire de mots de passe) + les identités dans `~/.config/sops/age/keys.txt`.
+Plus un dépôt restic si activé.
 
 ```bash
 # le VPS neuf a de nouvelles clés d'hôte : purger les anciennes empreintes
@@ -133,11 +150,18 @@ modification.
 - **Hooks locaux** : `brew install pre-commit && pre-commit install` (une fois par
   clone). Ensuite chaque commit est scanné (gitleaks, yamllint) avant d'exister ;
   un secret en clair ne peut plus être commité par accident.
-- Les deux fichiers vault (chiffrés) sont en liste blanche gitleaks
+- Les deux fichiers `*.sops.yml` (chiffrés) sont en liste blanche gitleaks
   (`.gitleaks.toml`) : blobs à haute entropie sans secret en clair.
 
 ## Publication du repo
 
 > [!WARNING]
-> `.vault-pass` (gitignoré). `vault.yml` et `private.yml` sont
-publiables car chiffrés (AES256), sous réserve d'un mot de passe de vault fort.
+> Avant tout passage en public, vérifier `git log -p | grep -iE '<valeurs sensibles>'` :
+> l'historique git peut contenir d'anciennes valeurs en clair même si les fichiers
+> courants sont propres. Au besoin, réinitialiser l'historique (branche orphan).
+
+`vault.sops.yml` et `private.sops.yml` sont publiables : SOPS ne chiffre que les
+**valeurs**, vers des clés dont la partie privée vit dans les YubiKeys (ou le
+gestionnaire de mots de passe pour la clé de secours). Aucun secret racine n'est
+committé ni gitignoré : il n'y a plus rien à protéger hors du repo, hormis les
+clés physiques elles-mêmes.

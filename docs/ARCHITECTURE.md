@@ -4,7 +4,7 @@
 
 Décisions de conception et modèle de menace. Les exemples utilisent `dev`,
 `admin`, `example.com` et `203.0.113.10` ; les valeurs réelles vivent dans
-`private.yml` et `vault.yml` (chiffrés).
+`private.sops.yml` et `vault.sops.yml` (chiffrés SOPS).
 
 ## 1. Exigences et modèle de menace
 
@@ -102,7 +102,7 @@ bind localhost de sshd, policy Access à l'edge, clé SSH par machine.
 
 Le compte cloud créé par le provider ne sert qu'à créer `admin` au premier play
 du bootstrap ; il est supprimé avant la fin du même run (`cloud_users_to_remove`). Une clé SSH **par machine cliente**, jamais partagée :
-la révocation se fait par retrait de la clé dans `private.yml` + `just provision`.
+la révocation se fait par retrait de la clé dans `private.sops.yml` + `just provision`.
 
 ## 5. Hardening (rôle `hardening`)
 
@@ -147,11 +147,17 @@ possible ; l'implémentation complète est dans l'historique git.
   verrouille sshd sur localhost. Tous les runs suivants passent par le tunnel
   (`ProxyCommand` dans l'inventaire).
 - **Idempotence** : `ansible-lint` profil production ; `just check` avant tout apply.
-- **Secrets** : ansible-vault (inclus dans ansible-core, chaîne d'outillage 100 %
-  standard). Contenu : token du tunnel, mot de passe du compte admin, credentials de
-  backup. `no_log` sur toute tâche qui les manipule. Le fichier de mot de passe du
-  vault est local et gitignoré ; le sudo d'Ansible (`ansible_become_password`) est
-  alimenté depuis le vault, sans aucune saisie interactive.
+- **Secrets** : SOPS, chiffrement des valeurs vers des clés **age matérielles**
+  (YubiKey, slot PIV). Deux fichiers committés chiffrés (`vault.sops.yml`,
+  `private.sops.yml`), déchiffrés au run par le vars-plugin `community.sops` :
+  clé physique + PIN + toucher requis. Trois destinataires (2 YubiKeys + 1 clé de
+  secours) garantissent la résilience ; aucun secret racine sur disque. `no_log`
+  sur toute tâche manipulant ces valeurs ; le sudo d'Ansible
+  (`ansible_become_password`) en est alimenté, sans saisie interactive.
+- **Modèle de confiance** : le déchiffrement exige la présence physique d'une clé
+  et une action humaine (toucher). Un vol de disque, de snapshot ou du dépôt git
+  ne donne rien — contrairement à un fichier de mot de passe qu'un malware pourrait
+  lire. C'est le passage de « secret stocké » à « secret matériel ».
 
 ## 8. Sauvegardes (rôle `backup`, optionnel)
 
