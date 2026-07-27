@@ -38,44 +38,55 @@ Vérification :
 ## Phase 2 : Machine de contrôle
 
 ```bash
-# macOS : brew install ansible ansible-lint yamllint just cloudflared nmap
+# macOS : ansible, lint, just, cloudflared, nmap + chaîne SOPS/age
+brew install ansible ansible-lint yamllint just cloudflared nmap \
+             sops age-plugin-yubikey pre-commit
+pre-commit install                              # hooks anti-secrets (gitleaks)
 ansible-galaxy collection install -r requirements.yml
-brew install pre-commit && pre-commit install   # hooks anti-secrets (gitleaks)
 
 # Une clé SSH par machine cliente
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_laptop -C "dev@laptop"
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519_laptop   # macOS
 ```
 
+Les secrets sont chiffrés avec SOPS vers des clés **age matérielles** (YubiKey) :
+enregistrement des identités dans `~/.config/sops/age/keys.txt` et durcissement
+des clés (PIN, PUK, management key TDES) — voir [OPERATIONS.md](OPERATIONS.md#secrets).
+
 Vérification :
 
-- [ ] `just --version`, `ansible --version`, `cloudflared --version` répondent
+- [ ] `just --version`, `sops --version`, `cloudflared --version` répondent
 
 ## Phase 3 : Configuration du repo
 
+Les destinataires de chiffrement (recipients des YubiKeys + clé de secours) sont
+déclarés dans `.sops.yaml`. Créer les deux fichiers depuis leurs modèles, les
+remplir, puis les chiffrer avec SOPS :
+
 ```bash
-# 1. Mot de passe du vault (local, JAMAIS commité)
-printf '%s\n' "$(openssl rand -base64 32)" > .vault-pass && chmod 600 .vault-pass
-#   → copie dans le gestionnaire de mots de passe (sans l'afficher en clair)
+cd inventories/prod/group_vars/all
 
-# 2. Valeurs identifiantes (committées CHIFFRÉES)
-cp inventories/prod/group_vars/all/private.yml.example \
-   inventories/prod/group_vars/all/private.yml
-$EDITOR inventories/prod/group_vars/all/private.yml
-#   → vps_user, clés publiques, cloudflare_ssh_hostname, clé privée Ansible
-ansible-vault encrypt inventories/prod/group_vars/all/private.yml
+# Valeurs identifiantes : user, clés publiques, hostname, clé privée Ansible
+cp private.sops.yml.example private.sops.yml && $EDITOR private.sops.yml
+sops encrypt -i private.sops.yml
 
-# 3. Secrets chiffrés (modèle : vault.yml.example)
-just vault-init
+# Secrets : token du tunnel, mot de passe admin, credentials backup
+cp vault.sops.yml.example vault.sops.yml && $EDITOR vault.sops.yml
+sops encrypt -i vault.sops.yml
+cd -
 ```
 
 Vérification :
 
-- [ ] `git status` ne liste pas `.vault-pass`
-- [ ] `head -1` sur `vault.yml` **et** `private.yml` → `$ANSIBLE_VAULT;1.1;AES256`
+- [ ] `grep -q 'sops:' vault.sops.yml` et idem `private.sops.yml` (fichiers chiffrés)
+- [ ] `sops decrypt vault.sops.yml` affiche le clair (PIN + toucher YubiKey)
 - [ ] `just lint` passe
 
 ## Phase 4 : Bootstrap
+
+> [!NOTE]
+> Chaque session : `just unlock` une fois (saisit le PIN, mis en cache tant que
+> la YubiKey reste branchée). Les commandes suivantes ne demandent que le toucher.
 
 Prérequis : VPS Fedora joignable sur son IP publique, avec la clé de la machine de
 contrôle autorisée (sinon `ssh-copy-id` au préalable).

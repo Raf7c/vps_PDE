@@ -4,8 +4,8 @@ profile: production
 exclude_paths:
   - .git/
   - docs/
-  - inventories/prod/group_vars/all/vault.yml
-  - inventories/prod/group_vars/all/private.yml
+  - inventories/prod/group_vars/all/vault.sops.yml
+  - inventories/prod/group_vars/all/private.sops.yml
 
 skip_list:
   - var-naming[no-role-prefix]  # vars transverses définies en group_vars, consommées par plusieurs rôles

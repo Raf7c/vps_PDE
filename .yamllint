@@ -18,5 +18,5 @@ rules:
 
 ignore: |
   .git/
-  inventories/prod/group_vars/all/vault.yml
-  inventories/prod/group_vars/all/private.yml
+  inventories/prod/group_vars/all/vault.sops.yml
+  inventories/prod/group_vars/all/private.sops.yml

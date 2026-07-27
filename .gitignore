@@ -1,6 +1,5 @@
-# Secret racine — ne JAMAIS commiter (private.yml et vault.yml sont
-# committés CHIFFRÉS par ansible-vault avec ce mot de passe)
-.vault-pass
+# Les *.sops.yml committés sont chiffrés (valeurs uniquement). Interdire tout
+# fichier de secret en clair qui traînerait.
 *.pem
 *.key
 
@@ -10,3 +9,4 @@
 
 # Divers
 .DS_Store
+.idea/

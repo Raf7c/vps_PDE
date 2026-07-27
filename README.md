@@ -29,27 +29,29 @@ flowchart LR
   et `just provision` (paquets : dépôts officiels Fedora uniquement, une exception
   documentée). L'utilisateur de travail n'installe rien au niveau système : il dispose
   de toolbox/podman rootless et de `~/bin` pour ses besoins propres.
-- **Secrets chiffrés** : ansible-vault ; la clé du vault ne quitte jamais la machine
-  de contrôle et n'est jamais commitée.
+- **Secrets matériels** : SOPS chiffre les valeurs vers des clés **age portées par
+  YubiKey** (PIN + toucher physique à chaque déchiffrement). Aucun secret racine sur
+  disque ; trois destinataires (2 YubiKeys + 1 clé de secours) pour la résilience.
 
 ¹ *Les exemples de cette documentation utilisent `dev`, `example.com` et
-`203.0.113.10` : adapter à vos valeurs (`private.yml`, cf. docs/SETUP.md).*
+`203.0.113.10` : adapter à vos valeurs (`private.sops.yml`, cf. docs/SETUP.md).*
 
 ## Démarrage
 
 Prérequis : un domaine géré chez Cloudflare, un VPS Fedora, et sur la machine de
-contrôle : `ansible`, `ansible-lint`, `yamllint`, `just`, `cloudflared`.
+contrôle : `ansible`, `just`, `cloudflared`, `sops`, `age-plugin-yubikey`.
 
 La mise en service complète (Cloudflare, secrets, bootstrap, vérifications) est un
 runbook unique à dérouler dans l'ordre : **[docs/SETUP.md](docs/SETUP.md)**.
-En résumé : configurer le tunnel côté Cloudflare, créer `.vault-pass` +
-`private.yml`/`vault.yml` chiffrés, puis `just bootstrap <ip> [user]` (une fois)
+En résumé : configurer le tunnel côté Cloudflare, remplir et chiffrer
+`private.sops.yml`/`vault.sops.yml`, puis `just bootstrap <ip> [user]` (une fois)
 et `just provision` (toujours).
 
 ## Commandes
 
 | Commande | Effet |
 |---|---|
+| `just unlock` | déverrouille la YubiKey (PIN) pour la session ; à lancer une fois |
 | `just check` | dry-run (`--check --diff`), systématique avant tout apply |
 | `just provision` | applique l'état complet via le tunnel |
 | `just lint` | ansible-lint (profil production) + yamllint |
@@ -60,7 +62,7 @@ et `just provision` (toujours).
 ## Structure
 
 ```
-inventories/prod/   inventaire + group_vars (vars.yml en clair ; private.yml et vault.yml chiffrés)
+inventories/prod/   inventaire + group_vars (vars.yml clair ; private.sops.yml et vault.sops.yml chiffrés SOPS)
 playbooks/          bootstrap.yml (initial) · site.yml (courant)
 roles/              base · cloudflared · hardening · devtools · backup
 docs/               ARCHITECTURE · SETUP · OPERATIONS · CLIENT-POSTE

@@ -1,0 +1,15 @@
+---
+# Règles de chiffrement SOPS. Chaque fichier *.sops.yml des group_vars est
+# chiffré (valeurs uniquement) vers TROIS destinataires age ; n'importe lequel
+# déchiffre seul :
+#   - YubiKey A (quotidienne)
+#   - YubiKey B (secours, stockée hors du lieu de A)
+#   - clé age logicielle (secours ultime, clé privée dans le gestionnaire de mdp)
+# Rotation des destinataires : éditer cette liste puis `just sops-updatekeys`.
+creation_rules:
+  - path_regex: inventories/prod/group_vars/all/.*\.sops\.ya?ml$
+    key_groups:
+      - age:
+          - age1yubikey1qt2838llhrp5q7gv8zyh3dtm4a49v77c4jzxnwm64lmssa6ndmkqcf98xwf
+          - age1yubikey1qww9600wzmnjx3rhy46azr5302jva9ny978jdvcvnz3w3lya8uvcvt6jsxr
+          - age157xv0anmkpk2yqh9jnm6tpcgcse2z3z0hgmrlc3jjc4edgsju4fqgeh23h

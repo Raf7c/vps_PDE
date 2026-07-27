@@ -32,13 +32,13 @@ jobs:
       - name: Installer les collections
         run: ansible-galaxy collection install -r requirements.yml
 
-      # Les vaults sont chiffrés et exclus du lint ; ansible.cfg référence
-      # néanmoins un fichier de mot de passe, absent en CI par conception.
-      - name: Fichier vault factice (jamais utilisé pour déchiffrer)
-        run: echo ci-placeholder > .vault-pass
-
+      # Le lint valide syntaxe et style, pas le déchiffrement (qui exige les
+      # clés age, hors périmètre CI). On désactive le vars-plugin sops le temps
+      # du lint : aucun *.sops.yml n'est déchiffré.
       - name: ansible-lint (profil production)
         run: ansible-lint
+        env:
+          ANSIBLE_VARS_ENABLED: host_group_vars
 
       - name: yamllint
         run: yamllint .

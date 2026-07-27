@@ -1,7 +1,7 @@
 ---
-# MODÈLE de vault.yml, sans aucun vrai secret.
-# Création du vrai fichier (chiffré à la sauvegarde) : just vault-init
-# Édition ultérieure : just vault-edit
+# MODÈLE de vault.sops.yml, sans aucun vrai secret.
+# Mise en service : remplir une copie nommée vault.sops.yml puis
+#   sops encrypt -i vault.sops.yml   (édition ultérieure : just vault-edit)
 
 # Token du tunnel Cloudflare (dashboard Zero Trust → Networks → Tunnels)
 vault_cloudflared_tunnel_token: "eyJhCHANGEME"
