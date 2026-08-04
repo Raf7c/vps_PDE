@@ -4,6 +4,10 @@
 - name: Provisionner le VPS de dev
   hosts: vps
   become: true
+  vars:
+    # sudo d'admin, depuis les secrets SOPS (chargés par le vars-plugin
+    # community.sops avant les tâches). Aucune saisie interactive.
+    ansible_become_password: "{{ vault_vps_admin_password }}"
 
   roles:
     - base

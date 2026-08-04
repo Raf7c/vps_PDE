@@ -13,8 +13,13 @@ unlock:
 # Premier provisionnement, via l'IP publique du provider (une seule fois).
 # Usage : just bootstrap 203.0.113.10           (login root direct)
 #         just bootstrap 203.0.113.10 fedora    (image OVH : user fedora + sudo)
+# Inventaire prod (→ secrets SOPS chargés par le vars-plugin), mais on force
+# l'IP publique et la connexion directe (le tunnel n'existe pas encore).
 bootstrap ip user="root":
-    ansible-playbook playbooks/bootstrap.yml -i '{{ ip }},' -u {{ user }}
+    ansible-playbook playbooks/bootstrap.yml \
+      -i inventories/prod/hosts.yml \
+      -e ansible_host={{ ip }} -e ansible_ssh_common_args='' \
+      -e bootstrap_cloud_user={{ user }}
 
 provision:
     ansible-playbook playbooks/site.yml

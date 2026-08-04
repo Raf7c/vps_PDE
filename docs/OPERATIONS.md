@@ -40,6 +40,28 @@ Révoquer une machine (perte, vol, départ) : retirer sa clé de la liste,
 `just provision`, effet immédiat. La clé `admin` (machine de contrôle) suit la même
 logique via `vps_admin_pubkeys`.
 
+<details><summary>Git / GitHub depuis le VPS</summary>
+
+Une clé SSH **dédiée au VPS** (fichier, générée sur le VPS), déclarée sur GitHub :
+
+```bash
+ssh vps
+ssh-keygen -t ed25519 -f ~/.ssh/github_ed25519 -C "vps"
+cat ~/.ssh/github_ed25519.pub          # → GitHub > Settings > SSH keys (Authentication)
+printf 'Host github.com\n  IdentityFile ~/.ssh/github_ed25519\n' >> ~/.ssh/config
+git config --global user.email "…@users.noreply.github.com"
+ssh -T git@github.com                   # "Hi <user>! You've successfully authenticated"
+```
+
+Une clé de sécurité (YubiKey, `ed25519-sk`) n'est **pas** utilisable depuis le VPS :
+elle exige le matériel branché sur la machine qui signe, or la YubiKey est sur la
+machine de contrôle. L'agent forwarding qui contournerait cela est volontairement
+désactivé (`AllowAgentForwarding no`). La protection ici est la clé **dédiée et
+révocable** (doctrine « une clé par machine »), et le fait que le VPS n'est
+lui-même joignable que par le tunnel doublement authentifié.
+
+</details>
+
 ## Secrets et valeurs identifiantes
 
 Deux fichiers **SOPS** committés, chiffrés (valeurs uniquement) vers des clés

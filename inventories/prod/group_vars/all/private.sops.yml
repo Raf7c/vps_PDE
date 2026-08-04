@@ -4,13 +4,13 @@
 vps_user: ENC[AES256_GCM,data:THZsM5ZXfOQ=,iv:RPoHRPo2D8V3SdF5mRfqX/gRS+H3KtNRQzN8gBWwmgg=,tag:PVJI0kT0p9FRP6TFMys1Tw==,type:str]
 #ENC[AES256_GCM,data:XmK7D2wcB1PJYrFwsl3tvzHLF44bq/fe49lkI7+Ucgvc5evfrfsmRodN4Ko8hcguEZh7HqzDMRY96kw=,iv:24bZ5MvuKYfYAokyORYq8d5taPtAkLsapPJLzALksqc=,tag:XYhd46/z1p5jwmYSQxUMjw==,type:comment]
 vps_user_pubkeys:
-    - ENC[AES256_GCM,data:AWldbOVqHpM0G7JCZ4dIEG/ytkGUkSqjgWASWeb2mBBYVLvYUXzgcqmStY0FSf/RRn0mV5igj7a4lzJ/Ox4IV2pjHyI/Eq4c0uKLsDmR7VljchIQRjzdr8PGJkI=,iv:uMayB90Rp0QpS5qtDsZrvX72eh3yIdbl13daE4qnEnY=,tag:O+rhmuJeNYyvQcVUEYyFJg==,type:str]
+    - ENC[AES256_GCM,data:Ld389wQTsZ89gN3sIDH4xU0Ozv8r3kyqvcbKWtgdsZM/vZKLjIJcP9rGeuE3B4J3OLRl7FlHyB2eZqTbd6wU5H1EFPUsdj0xy0TKzVQrgnEN1kGZ0t8Seg==,iv:X4tWrJ0274ysUoyKb45+RCB9W2qZu2KVAXtGFyTHPL8=,tag:JKqG1TXJUyVnlqZtfkDy3A==,type:str]
 vps_admin_pubkeys:
-    - ENC[AES256_GCM,data:u3cvKcKXrDs7JnN8MPERSu9BewFibNBd/N7UY56eT1ecaDSkp8trE7TMBdjkoAIHYndzDV65BGdOW3VOSUft6YWSqfXoy0bZ2XSKLj7CIH3T+AveejfFsbpvnik=,iv:aDeBT2KRzorwzr/Sf5spi06qrkwaoIZc+Vf548VcfVo=,tag:CPDArWTuDIg/VUuYTyYdHQ==,type:str]
+    - ENC[AES256_GCM,data:j5iKUUlvaMC/auBVNc2g14WeHzHDL5CNqC5IuJqoqSI+Cy0qlbM5zqIf6oA2XAghIRM/TvVmWhs478dNoxG2OBnSGZLuZFND+yk13PBGFxtD1wcxm46LaA==,iv:+bVCWWU5ZVwNU2ddq6laeo4VDttV5pOJ/FljwfIOiws=,tag:p/rXfVvY124suhb/ow/8ow==,type:str]
 #ENC[AES256_GCM,data:LZUFHjyqgrhw2i3GIBMgG64OuhRJGngICwBIWVF7kw1hxyb8NCmZzTUm2jFma0s28+OjR37Rw5QOUi7/f6gwggc=,iv:oI/eTS3oKph9Ksy/6ZFyLlzJ9KajjoTCdRhUAaOb+TY=,tag:xvHNDVQ4hEajpDJQTzSSlA==,type:comment]
 cloudflare_ssh_hostname: ENC[AES256_GCM,data:+9R5Q06wyCufXKS8NGRdcVm2Qw==,iv:12bTQJR7BbCNeICQyyx6rpm6ugsOKTXCrYgyPotAAuk=,tag:1BbHw3PJZL/esAk0bt4AVw==,type:str]
 #ENC[AES256_GCM,data:Mfi/nw31Nfo5IynOFcYEeTu1oLD/sgThqT8sOnSg/N6ENrAv6Wp/sP2YyNcHD7CHykfOXCLZ8CitRQ==,iv:ian4lyKlJH/Lhvp2UzHEZ3gJqjXXZpH54rWHYM1TPqs=,tag:pzDdv7bx99YxivHIwYgdPg==,type:comment]
-ansible_ssh_private_key_file: ENC[AES256_GCM,data:5kVnqp0XrIsZOPQY0zJiC+vqE0LMFilgZ9jKcBQ=,iv:axJPX7qJ2Ug8oo9t1bJR4qk6yoGQ7bHkAltpsCUerIQ=,tag:O9ZC8pdLvuVyOvuKGJedXg==,type:str]
+ansible_ssh_private_key_file: ENC[AES256_GCM,data:67FWmIyII4uYJn7umg==,iv:7n9aqdzbh3m1EufqCIWsB8fUitkTHnbfRqaR7XWcZBM=,tag:jKHRKrJJpyIM6TdpT8o/3w==,type:str]
 sops:
     age:
         - enc: |
@@ -42,7 +42,7 @@ sops:
             c/CTEF8ZNy+wShd8cfCzSKvM/jpUPqokDha2BEG/tzeF9MuDSCA6YA==
             -----END AGE ENCRYPTED FILE-----
           recipient: age157xv0anmkpk2yqh9jnm6tpcgcse2z3z0hgmrlc3jjc4edgsju4fqgeh23h
-    lastmodified: "2026-07-24T21:30:58Z"
-    mac: ENC[AES256_GCM,data:55xPAzVCiag5oFNuidahXlHjZRfIGNsjejVeSgudx4mljKFtW5G1XrxG/43ko+lOloloLWQ5QvbukRcnJwjIE1k7iqpxhSnB/wMotMjN0OnHI+SF7Fxk3M+G7YTIMWTJWKHeZJaISWgHjdVCgD5g0OwYah+wTphfOQd3oFIBxfY=,iv:ebPTMniGmtm19unGXTrYPjvO9irzWgLjP/gn6MZSduE=,tag:qOlTU9gDZKF/yTXAlzC4GQ==,type:str]
+    lastmodified: "2026-08-04T13:40:48Z"
+    mac: ENC[AES256_GCM,data:qypfR/ZhZ8Wdi36fyQFLjT8ojKU8TD9tNxAgoO3flbd4Y4yryyxhioNXPneM/fUKMnNllUmYHgJPVef/2zUbdyPC5lyfcMQOD/anMnn260IMZ0ZcUGtWioJ/JRNHB5M9hc8SbNRQ98/sFKgeEFlu6F1nl9Ogqe/Lm82xFd8ztDQ=,iv:099drjnpUlSGtL7AhElGe8V1t37rczD13YT81aEFcj8=,tag:JyGutZ0EuZOcVS6FjXpwHA==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.1

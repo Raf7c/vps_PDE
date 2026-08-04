@@ -123,13 +123,13 @@ la révocation se fait par retrait de la clé dans `private.sops.yml` + `just pr
 
 ## 6. Environnement de développement (rôle `devtools`)
 
-Liste volontairement minimale, installée par Ansible
-depuis les dépôts officiels : `git`, `gcc`, `make`, `gdb`, `valgrind` (le socle),
+Liste volontairement minimale, installée par Ansible depuis les dépôts officiels :
+`git`, `gcc`, `make`, `gdb`, `valgrind` (le socle C), `python3`/`python3-pip`,
 `tmux` et `neovim` (travail à distance), `podman` et `toolbox` (installation sans
-root). `zsh` est dans les paquets de base (shell de login). Le *linger* systemd est
-activé pour l'utilisateur de travail (ses services user et conteneurs survivent à
-la déconnexion). Tout besoin ponctuel passe par une toolbox ou par un ajout
-explicite à la liste.
+root), plus `tar`/`coreutils`. `zsh` est dans les paquets de base (shell de login).
+Le *linger* systemd est activé pour l'utilisateur de travail (ses services user et
+conteneurs survivent à la déconnexion). Tout besoin ponctuel passe par une toolbox
+ou par un ajout explicite à la liste (`devtools_packages`).
 
 L'utilisateur de travail ne modifie jamais le système. Ses espaces d'installation
 autonomes (toolbox, `~/bin`) sont documentés dans
