@@ -104,6 +104,10 @@ Le compte cloud créé par le provider ne sert qu'à créer `admin` au premier p
 du bootstrap ; il est supprimé avant la fin du même run (`cloud_users_to_remove`). Une clé SSH **par machine cliente**, jamais partagée :
 la révocation se fait par retrait de la clé dans `private.sops.yml` + `just provision`.
 
+Le rôle `accounts` déploie les `authorized_keys` en mode `exclusive`, à chaque
+provision : les listes du fichier chiffré font autorité, et une clé ajoutée à la
+main sur le serveur est effacée au passage suivant.
+
 ## 5. Hardening (rôle `hardening`)
 
 - **firewalld** : zone `public` sans service ni port, target DROP (silencieux).
@@ -150,14 +154,17 @@ possible ; l'implémentation complète est dans l'historique git.
 - **Secrets** : SOPS, chiffrement des valeurs vers des clés **age matérielles**
   (YubiKey, slot PIV). Deux fichiers committés chiffrés (`vault.sops.yml`,
   `private.sops.yml`), déchiffrés au run par le vars-plugin `community.sops` :
-  clé physique + PIN + toucher requis. Trois destinataires (2 YubiKeys + 1 clé de
-  secours) garantissent la résilience ; aucun secret racine sur disque. `no_log`
+  clé physique + PIN + toucher requis. Deux destinataires, les deux YubiKeys, et
+  aucun destinataire logiciel : rien à voler sur disque, mais la perte des deux
+  clés rend les secrets irrécupérables. `no_log`
   sur toute tâche manipulant ces valeurs ; le sudo d'Ansible
   (`ansible_become_password`) en est alimenté, sans saisie interactive.
 - **Modèle de confiance** : le déchiffrement exige la présence physique d'une clé
   et une action humaine (toucher). Un vol de disque, de snapshot ou du dépôt git
-  ne donne rien — contrairement à un fichier de mot de passe qu'un malware pourrait
-  lire. C'est le passage de « secret stocké » à « secret matériel ».
+  ne donne rien, contrairement à un fichier de mot de passe qu'un malware pourrait
+  lire. C'est le passage de « secret stocké » à « secret matériel ». Les mêmes
+  YubiKeys portent les clés SSH (`ed25519-sk` résidentes) : un seul objet physique
+  commande le déchiffrement des secrets et l'ouverture des sessions.
 
 ## 8. Sauvegardes (rôle `backup`, optionnel)
 

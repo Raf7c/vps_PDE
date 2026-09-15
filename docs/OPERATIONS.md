@@ -73,36 +73,64 @@ YubiKey physique + PIN + toucher.
 - `private.sops.yml` : ce qui **identifie** le déploiement (utilisateur, clés
   publiques, hostname, chemin de la clé Ansible) : `just private-edit`.
 
-Trois destinataires (`.sops.yaml`), n'importe lequel déchiffre seul : YubiKey A
-(quotidienne), YubiKey B (secours, rangée ailleurs), clé age logicielle (secours
-ultime, clé privée dans le gestionnaire de mots de passe).
+Deux destinataires (`.sops.yaml`), n'importe lequel déchiffre seul : YubiKey A
+(quotidienne), YubiKey B (secours, rangée ailleurs). Il n'existe volontairement
+aucun destinataire logiciel : la perte simultanée des deux clés rend les secrets
+irrécupérables, ce qui fait de B un actif critique à stocker hors site.
 
 Usage : `just unlock` en début de session (PIN une fois), puis toucher à chaque run.
+
+Les mêmes YubiKeys portent les clés SSH (`ed25519-sk` résidentes). `private.sops.yml`
+déclare la quotidienne ; pour travailler avec celle de secours, passer son chemin :
+`just provision ~/.ssh/vps42_bis_sk`. Les poignées se régénèrent sur toute machine
+avec `ssh-keygen -K`, la partie privée ne quittant jamais la puce.
 
 Rotations :
 
 - Édition : `just vault-edit` / `just private-edit` (SOPS ouvre en clair, re-chiffre
   à la sauvegarde).
-- Token du tunnel : dashboard Zero Trust → rotate → `just vault-edit` → `just provision`.
-- <details><summary>Mot de passe admin (le hash n'est posé qu'à la création du compte)</summary>
+- Token du tunnel : dashboard → Networking → Tunnels → le tunnel → *Rotate token*,
+  puis *Add replica* pour lire la nouvelle valeur `eyJ...` (sans exécuter la commande
+  proposée) → `just vault-edit` → `just provision`. Les connecteurs actifs survivent
+  à la rotation jusqu'à leur redémarrage : l'accès n'est pas coupé dans l'intervalle.
+- <details><summary>Mot de passe admin (changer sur le serveur AVANT le vault)</summary>
 
-  `just vault-edit` avec la nouvelle valeur, puis :
+  Ansible ne peut pas faire ce changement : il s'authentifierait en sudo avec la
+  valeur du vault, qui serait déjà la nouvelle alors que le serveur porte encore
+  l'ancienne. Le serveur d'abord, le vault ensuite.
 
   ```bash
-  ansible all --become -m ansible.builtin.user \
-    -a "name=admin password={{ vault_vps_admin_password | password_hash('sha512') }}"
+  ssh admin@ssh.example.com
+  passwd
+  exit
+
+  just vault-edit   # y reporter la même valeur
+  just check        # valide que become fonctionne toujours
   ```
 
   </details>
 - <details><summary>Remplacer une YubiKey perdue / ajouter un destinataire</summary>
 
-  Générer l'identité sur la nouvelle clé (`age-plugin-yubikey --generate`),
-  ajouter son recipient dans `.sops.yaml`, retirer l'ancien, puis réchiffrer
-  les fichiers vers les nouveaux destinataires :
+  Une YubiKey porte deux choses : un destinataire age (slot PIV, déchiffrement
+  SOPS) et une clé SSH `ed25519-sk` résidente (slot FIDO2, accès au VPS). Les
+  deux sont à remplacer.
 
   ```bash
+  age-plugin-yubikey --generate            # nouveau destinataire age
+  # remplacer l'ancien recipient dans .sops.yaml, puis :
   just sops-updatekeys
+
+  /opt/homebrew/opt/openssh/bin/ssh-keygen -t ed25519-sk \
+    -O resident -O verify-required -O application=ssh:vps \
+    -C "vps@yubikey-c" -f ~/.ssh/vps_sk_c
+  just private-edit                        # remplacer la pubkey dans les deux listes
+  just provision                           # exclusive:true révoque l'ancienne
   ```
+
+  L'ordre des destinataires dans `.sops.yaml` ne se propage pas aux fichiers déjà
+  chiffrés (`updatekeys` compare des ensembles). Pour remettre la clé quotidienne
+  en tête : `sops rotate -i --rm-age <recipient> <fichier>` puis la même commande
+  avec `--add-age`, qui le replace en fin de liste.
 
   </details>
 
@@ -140,30 +168,85 @@ niveau par `just provision`.
 | Clé SSH refusée | `journalctl -u sshd` côté VPS (via console) : shell manquant, `AllowUsers`, contexte SELinux (`restorecon -Rv /home/<user>/.ssh`) |
 | Tunnel définitivement mort | Console web du provider = accès de secours : login `admin` + mot de passe du vault |
 | `Failed to decrypt YubiKey stanza` | PIN pas en cache : `just unlock` d'abord (contexte non-interactif ne peut pas le demander) |
-| YubiKey A et B perdues | Déchiffrer avec la clé age de secours (gestionnaire de mdp) : `SOPS_AGE_KEY=<clé> sops decrypt ...` |
+| YubiKey A et B perdues | Secrets irrécupérables (pas de destinataire logiciel) : reconstruire le VPS à neuf, révoquer le tunnel, régénérer tous les secrets |
 
 </details>
 
 ## Reconstruction (disaster recovery)
 
 Prérequis permanents : le repo (tout y est, `private.sops.yml` et `vault.sops.yml`
-chiffrés compris) + au moins une des clés age (YubiKey ou clé de secours du
-gestionnaire de mots de passe) + les identités dans `~/.config/sops/age/keys.txt`.
-Plus un dépôt restic si activé.
+chiffrés compris) + au moins une des deux YubiKeys + les identités dans
+`~/.config/sops/age/keys.txt`. Plus un dépôt restic si activé.
+
+> [!WARNING]
+> Sans restic activé, `/home` est perdu. Rapatrier avant de détruire.
+
+**1. Clé jetable.** Les panels d'hébergeur refusent le type `ed25519-sk` ; il faut
+une clé logicielle pour la seule connexion au compte cloud. Elle ne sert qu'au
+play 1 et disparaît avec ce compte, supprimé en fin de bootstrap.
 
 ```bash
-# le VPS neuf a de nouvelles clés d'hôte : purger les anciennes empreintes
-ssh-keygen -R <ip-publique> && ssh-keygen -R ssh.example.com
-# autoriser la clé de la machine de contrôle si le provider ne l'a pas injectée
-ssh-copy-id -i ~/.ssh/id_ed25519_laptop.pub <user-cloud>@<ip-publique>
-
-just bootstrap <ip-publique> [user-cloud]
-just provision
-# restauration des données depuis restic si activé
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/vps_tmp -C "temporaire-bootstrap"
+cat ~/.ssh/vps_tmp.pub     # à déclarer dans le panel du provider
 ```
 
-Le hostname du tunnel ne change pas : les clients existants refonctionnent sans
-modification.
+**2. Réinstallation.** Image Fedora, clé jetable sélectionnée. Noter l'IP publique,
+elle peut changer. Le hostname du tunnel, lui, ne change pas : les clients
+existants refonctionneront sans modification.
+
+**3. Empreintes d'hôte.** Le serveur neuf a de nouvelles clés d'hôte, et Ansible ne
+sait pas répondre à un prompt (`host_key_checking = True`).
+
+```bash
+ssh-keygen -R <ip-publique> && ssh-keygen -R ssh.example.com
+ssh <user-cloud>@<ip-publique>    # accepter, vérifier le shell, sortir
+```
+
+**4. Bootstrap.**
+
+```bash
+just unlock
+just bootstrap <ip-publique> <user-cloud>
+```
+
+**5. Bascule sur le tunnel.** Attendre le statut *HEALTHY* dans le dashboard Zero
+Trust, puis purger à nouveau (même hostname, nouvel hôte) :
+
+```bash
+ssh-keygen -R ssh.example.com
+ssh dev@ssh.example.com           # accepter, sortir
+just provision
+just check                        # changed=0 attendu : preuve d'idempotence
+```
+
+**6. Nettoyage.** `rm ~/.ssh/vps_tmp*` et retrait de la clé dans le panel. Puis
+restauration des données depuis restic si activé.
+
+**7. Vérification.** Voir la section suivante.
+
+## Vérification de conformité
+
+```bash
+nmap -Pn <ip-publique>            # 1000 filtered, aucun open
+```
+
+```bash
+ssh admin@ssh.example.com
+ss -tlnp | grep ':22'             # 127.0.0.1 et [::1] uniquement
+sudo firewall-cmd --get-target    # DROP
+sudo getenforce                   # Enforcing
+systemctl is-active cloudflared auditd chronyd
+id <user-cloud>                   # "no such user"
+```
+
+```bash
+ssh dev@ssh.example.com
+id                                # aucun groupe privilégié
+sudo -l                           # doit refuser
+```
+
+Tester aussi la YubiKey de secours seule, et la console web du provider en `admin`
+avec le mot de passe du vault : c'est l'unique accès si le tunnel tombe.
 
 ## Qualité et garde-fous
 
@@ -183,7 +266,7 @@ modification.
 > courants sont propres. Au besoin, réinitialiser l'historique (branche orphan).
 
 `vault.sops.yml` et `private.sops.yml` sont publiables : SOPS ne chiffre que les
-**valeurs**, vers des clés dont la partie privée vit dans les YubiKeys (ou le
-gestionnaire de mots de passe pour la clé de secours). Aucun secret racine n'est
+**valeurs**, vers des clés dont la partie privée ne quitte jamais les puces PIV
+des YubiKeys. Aucun secret racine n'est
 committé ni gitignoré : il n'y a plus rien à protéger hors du repo, hormis les
 clés physiques elles-mêmes.

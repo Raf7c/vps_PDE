@@ -48,6 +48,7 @@ devtools_packages:
   - coreutils    # fournit cat, et les utilitaires GNU de base
   - python3
   - python3-pip
+  - tree
 
 # ── Backups restic ───────────────────────────────────────────
 restic_paths:

@@ -1,7 +1,7 @@
 ---
 name: CI
 
-# Actions pinned to full commit SHAs: a tag is mutable — the tj-actions
+# Actions pinned to full commit SHAs: a tag is mutable, and the tj-actions
 # attack (CVE-2025-30066) repointed every existing tag to a malicious
 # commit. Matters most for third-party actions (gitleaks) in a repo that
 # handles infrastructure access. Dependabot proposes the bumps.

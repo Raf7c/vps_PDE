@@ -1,0 +1,25 @@
+---
+# Les listes de clés publiques du vault font autorité : `exclusive: true` fait
+# du retrait d'une ligne une révocation réelle, appliquée au prochain
+# `just provision`. Sans cela une clé déployée un jour reste autorisée à vie.
+#
+# Rejoué à chaque provision (et non au seul bootstrap) pour que la rotation des
+# accès ne dépende pas d'une reconstruction complète du serveur.
+
+- name: Compte de travail (AUCUN sudo) {{ vps_user }}
+  ansible.builtin.user:
+    name: "{{ vps_user }}"
+    shell: /usr/bin/zsh
+    password: "!"          # pas de mot de passe : ni login console, ni élévation
+
+- name: Clés SSH autorisées pour {{ vps_user }}
+  ansible.posix.authorized_key:
+    user: "{{ vps_user }}"
+    key: "{{ vps_user_pubkeys | join('\n') }}"
+    exclusive: true
+
+- name: Clés SSH autorisées pour {{ vps_admin }}
+  ansible.posix.authorized_key:
+    user: "{{ vps_admin }}"
+    key: "{{ vps_admin_pubkeys | join('\n') }}"
+    exclusive: true

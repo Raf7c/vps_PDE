@@ -30,7 +30,7 @@
   ansible.builtin.meta: flush_handlers
 
 # ── SSHD : n'écoute que sur localhost ──────────────────────────
-# cloudflared proxifie vers localhost:22 — sshd est injoignable
+# cloudflared proxifie vers localhost:22, donc sshd est injoignable
 # autrement, même depuis le réseau local du provider.
 - name: Durcissement sshd (drop-in)
   ansible.builtin.template:

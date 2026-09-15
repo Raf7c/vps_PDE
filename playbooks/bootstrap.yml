@@ -17,6 +17,11 @@
     # Compte cloud du provider (fedora, root…), passé par le justfile. Prime sur
     # l'ansible_user=admin de l'inventaire, car admin n'existe pas encore.
     ansible_user: "{{ bootstrap_cloud_user }}"
+    # Clé jetable injectée par le provider : les panels d'hébergeur refusent en
+    # général le type ed25519-sk. Portée au play 1 uniquement, donc elle n'a pas
+    # à figurer dans vps_admin_pubkeys et disparaît avec le compte cloud, que la
+    # fin du play 2 supprime.
+    ansible_ssh_private_key_file: "{{ bootstrap_cloud_key }}"
 
   tasks:
     - name: Vérifier que les clés publiques sont définies
@@ -50,9 +55,8 @@
     - name: Déployer les clés SSH de {{ vps_admin }}
       ansible.posix.authorized_key:
         user: "{{ vps_admin }}"
-        key: "{{ item }}"
-        exclusive: false
-      loop: "{{ vps_admin_pubkeys }}"
+        key: "{{ vps_admin_pubkeys | join('\n') }}"
+        exclusive: true
 
 - name: Bootstrap 2/2, provisionner et fermer (via admin)
   hosts: all
@@ -63,22 +67,9 @@
     # sudo d'admin, depuis les secrets SOPS déjà chargés par le vars-plugin.
     ansible_become_password: "{{ vault_vps_admin_password }}"
 
-  pre_tasks:
-    - name: Créer l'utilisateur de travail (AUCUN sudo) {{ vps_user }}
-      ansible.builtin.user:
-        name: "{{ vps_user }}"
-        shell: /usr/bin/zsh
-        password: "!"          # pas de mot de passe : ni login console, ni élévation
-
-    - name: Déployer les clés SSH de {{ vps_user }}
-      ansible.posix.authorized_key:
-        user: "{{ vps_user }}"
-        key: "{{ item }}"
-        exclusive: false
-      loop: "{{ vps_user_pubkeys }}"
-
   roles:
-    - base
+    - base          # doit précéder accounts : fournit le shell zsh du compte de travail
+    - accounts
     - cloudflared
     - hardening
 

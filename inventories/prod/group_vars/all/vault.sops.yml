@@ -1,5 +1,5 @@
-vault_cloudflared_tunnel_token: ENC[AES256_GCM,data:jaMfi7YHIfaxf7pjcGiBWiImdCfpfQ12KqhXY88jfatPPscP7s6BUTp4J/lGVr/EN8SkLbH5sT9nGZ3Bm+zqTxHfgGvf4hmX7LAHpl9gl9XdcxovRV/Faj465LyhKMpAcR7fbvhwg0bjcUCAR4BCoIl7WRUTa5Jdl1xxkenIczVYAs1rxAyIF1rDur0yo4GtMyvYmYZpY29lEFZuaoKG5DyKecQ1Xsq2QxwL5n5+4ZPaRa4bEMcSrQ==,iv:MHwZEQfEbvoFCvWMW6b+LhrAGNWT788PgyRDrHE4dxY=,tag:QQfnu/zGHD97+sNKmeijiw==,type:str]
-vault_vps_admin_password: ENC[AES256_GCM,data:cXAOD1FRsv6zEYlxTfNtp0mPiJx4NmWOZZauDvu3+DDQtoNKVtBgyIJPZa0d,iv:VU0Al1aodKNzo2Ow+dsfLbtxt3K9ybIeiJEznn25pxk=,tag:+K5AnwZLHZ/jo/RhfPxi3Q==,type:str]
+vault_cloudflared_tunnel_token: ENC[AES256_GCM,data:M2w5FpVw7y0p9lP+zR+JxUeQB6HAe8JbV5E9pDcIvDx10Y7BU1uEItymaURGKskQUraeD2Hvh+YRc3ej401jkqfw+S0appadS6ePtbxtvLATAh9txaZ6HLNIEDJSF+SrplsF7jM/D+3vSQBDoOXqQe1mtVWNEElYiCaKEeItjtecolZqtGAp3lixocFFg9dku/XNrZj1hsDB1JE3yOPqgXAlV6h8ZNM85Ak4J6IjQOoY9IwNqctnIx87Q7md4SWv4pqmX+JyzL1Z04a7p+oFXH/tDCn+TULMR3/yMfkrE9dyJN2Zxc2Sg1MauVBVZTcNbJPygX4gO9k=,iv:x616zgVu++UPkBsOwQvxO0n9jyf0WKixm0l6kgYM0jg=,tag:2L1oPjA47bh8k7/Zwsl8RQ==,type:str]
+vault_vps_admin_password: ENC[AES256_GCM,data:uK+u5lpNEFXhEnGvl3nCJsq1xz7ZcNpktGe/ku7dnwJI2kC/Ux6Kl/sFtzsV,iv:VU0Al1aodKNzo2Ow+dsfLbtxt3K9ybIeiJEznn25pxk=,tag:7YcDYakc33W+5r0oFQS/3g==,type:str]
 vault_restic_repository: ""
 vault_restic_password: ""
 vault_restic_env: {}
@@ -7,34 +7,25 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IFRiNmphUSBBOFY4Vk9S
-            aUhTOHdubmtlYm51K3NsUStPRzluL2hSTjhYbFJJNmZXTW9KZgpWd0cxUTJhRUZB
-            dW5GNG8zZ3J2UnZjL0NSdGF1ODhFZTVMcGh6WUhHSXJFCi0tLSBLVDB4NDRNYlA3
-            eTFFenJVMXo0TnBtRi8rTU5QQWJpZ0V3bTZFb2VWQ2Y0CpIFKNqodc1jzACDyWoq
-            Aa/sSE23t9VdsiStkZ8VIEIl9OM7YpJ9gwI1/Kf7OBc8zeNn3OeetGOatriK/oiQ
-            59k=
-            -----END AGE ENCRYPTED FILE-----
-          recipient: age1yubikey1qt2838llhrp5q7gv8zyh3dtm4a49v77c4jzxnwm64lmssa6ndmkqcf98xwf
-        - enc: |
-            -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IHhoT2M3USBBcUNXK2dz
-            ZDlIL1pDd2ZvNFRmeFlxdnFFL3lEcVJ3dSt5VUZ5R2RhL2xZZgp4cGpGc0NVK2FS
-            NG5PaWIyMytUd0ZaMXJ3Yk1kckhleXJVa0FkVUJpaGowCi0tLSBPeCtwaC95cUwz
-            blhDS1lrY3EyZzBDRmpkdjM4UUt4aEIrRURPbGdXZE5nCikpoWedPlGuWubtpIQJ
-            L4b0Mepewj40OR6RlgYnlGfupAXU+0qiA9gq7dyGcMgVEZ1QjBwA7FsCm47LVk6R
-            GgU=
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IHhoT2M3USBBaUdFL29J
+            OUl2RUgrNVhuMEl3RTIwaGwremdmWjNiamJqYW9ZY3lKaW5ySApYcUgzNzVZY3p3
+            bko3eHFxSVdWU2t1aFplYUtTMTlBMCtma3Jhay9YR0l3Ci0tLSBDUjJWbnRLTzgv
+            MnhZM3J0bGdNVFd5YWdVZFQzRVRCN3VPeEdpM3FhNHpRClFzM3Pc1yM05GKsOXm4
+            qoDBNWiBmFqt2eaHB2MWN7IHfk2ZQCmpF05hH6h8Xlk8BM7Yax31wOT/L4IgWihg
+            uGY=
             -----END AGE ENCRYPTED FILE-----
           recipient: age1yubikey1qww9600wzmnjx3rhy46azr5302jva9ny978jdvcvnz3w3lya8uvcvt6jsxr
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBObWlvT0JmNGRXTUVjTkFv
-            YUVBYlN0UllrMWhQMVhKZWVlWHZFT1BRSHp3CnFCUDdXejhyMk91cG5UMGdJWEZk
-            SWh0M2luV0p1RW8vY0pISU1mQ0NtOWcKLS0tIElsYlBPK2ZHeHp4V2hWZFpRWWtT
-            MFlqUWxCekovdWVOK0Nydm56a05pNzQKQyWwblwnWKAZxJONhQzfcdy8OE28rqs4
-            VBP07RMAtRs6ZM8qSi9OD4D16ryALRhDz3ZqejZSPfyxoXJM4oHB+A==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IFRiNmphUSBBeVZGOVpo
+            VW00SUNMTCtwLzNTVVB3eVI4aVhsMmlJV1dFWnlVbkhZZjRMNQp2MnI1WW5PeERS
+            OWRvcnlTR0lsbURyaXFndlFRQXZSRERjbUVOczlPcGdBCi0tLSA4Qk5NaUVTRW50
+            OVBJTkZLdkp2RWJPeW1MTnBVYlhpOFFLUnJBSWFBYmdrCv8ZZcFIVszLK5vVgPwi
+            IVgyfn9TdI2FDnoruDPJwF2yDJnN56bhGeEtHpdZyCSZPPIjo/9cRiOzX2djIxKL
+            9+8=
             -----END AGE ENCRYPTED FILE-----
-          recipient: age157xv0anmkpk2yqh9jnm6tpcgcse2z3z0hgmrlc3jjc4edgsju4fqgeh23h
-    lastmodified: "2026-07-24T21:30:33Z"
-    mac: ENC[AES256_GCM,data:FrNeuvHGD0pDmPkUVSH5jerchy2xurLo/BXucWZup73gW6wqD3/dE+kM9pQ5ayzZnHQKNThKtV8v53VqIPKhVZAY9UttKjnhTpvuKGugeKcKVfmrsBS7/fxauhF50zRfM4PKkFHMRQof8FFCgNPjA0He4SwyqZuVyLyo+3ZEfWM=,iv:2FKVDWxhbhMFIuR5OlyEnskMvoNcrZaaHUgawruuKW0=,tag:lIPI43R+D/FiN8pZXvaJ6g==,type:str]
+          recipient: age1yubikey1qt2838llhrp5q7gv8zyh3dtm4a49v77c4jzxnwm64lmssa6ndmkqcf98xwf
+    lastmodified: "2026-09-15T19:34:49Z"
+    mac: ENC[AES256_GCM,data:KrpJlHcLk1DLk9fO5MfxsGewjyl37EeOQDctRqvrX6IcbWruhVUjWqYdas0eV6jm6FgvfuS1kXsdTMhhWWei9MlLnPeAINHZezuF36ljaHfrP9JaS4eKPMI76+CEDgjduoRtmet/FDJdiVM3QaKy4f567Xw/OKzOXuBKKiES5vA=,iv:oEAiZh7Qrj+kcmmF3FGzG6kaLkqLd2Ztn69ZIoNk+8w=,tag:mw6ElxWBHC9laUiVlg6YOw==,type:str]
     unencrypted_suffix: _unencrypted
-    version: 3.13.1
+    version: 3.13.3

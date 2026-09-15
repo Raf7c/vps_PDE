@@ -7,17 +7,20 @@
 # Utilisateur de travail : AUCUN sudo, aucune élévation possible
 vps_user: dev
 
-# Une clé publique PAR machine cliente → révocation fine
+# Une clé publique PAR YubiKey → révocation fine. Le rôle accounts déploie ces
+# listes en mode exclusive : ce qui n'y figure pas est effacé du serveur.
 vps_user_pubkeys: []
-#  - "ssh-ed25519 AAAA... dev@laptop"
-#  - "ssh-ed25519 AAAA... dev@poste"
+#  - "sk-ssh-ed25519@openssh.com AAAA... vps@yubikey-a"
+#  - "sk-ssh-ed25519@openssh.com AAAA... vps@yubikey-b"
 
 # Clés autorisées pour le compte d'administration (machine de contrôle Ansible)
 vps_admin_pubkeys: []
-#  - "ssh-ed25519 AAAA... dev@laptop"
+#  - "sk-ssh-ed25519@openssh.com AAAA... vps@yubikey-a"
+#  - "sk-ssh-ed25519@openssh.com AAAA... vps@yubikey-b"
 
 # Hostname SSH du tunnel (ingress Cloudflare : ssh://localhost:22)
 cloudflare_ssh_hostname: ssh.example.com
 
-# Clé privée utilisée par Ansible (machine de contrôle)
-ansible_ssh_private_key_file: ~/.ssh/id_ed25519_laptop
+# Clé utilisée par Ansible (machine de contrôle), YubiKey quotidienne.
+# Celle de secours se passe en argument : just provision ~/.ssh/vps_sk_b
+ansible_ssh_private_key_file: ~/.ssh/vps_sk_a
