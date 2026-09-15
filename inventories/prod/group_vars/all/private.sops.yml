@@ -7,12 +7,12 @@ vps_user_pubkeys:
     - ENC[AES256_GCM,data:0yZwyQzMMYQYORh/2w+qdv1tMTvdwlZJLUBkb21MJNCX0+PJhEYTMJfOdJkGzTO857zLUDQnNWAjoFnmrYh3sdKmFofOQflkqZwF+MQgMWz+ar91cuVyYBOqCOLepgLBaPr4wfUCqI1As+hZzgx/z2KEz1YnRQZXr7SKaS67XklX5dsPovoDBvChlknZ,iv:GDMYRo3Lt8V11FO9cPqrOLz1VtrtbBWcNL0/7j/bsP0=,tag:SkZyyxQwVjKoAKZ6IkCQCw==,type:str]
     - ENC[AES256_GCM,data:wk8GTD7vZqgvGFaKVXbePumkMePxZaPlZdBhxxrXzW7rzEQy1Vmb/9SmUWQvfP+VmuSov2AWM4bQmKNs+RWMaq6a9j/AweIlFxAxws/xWZr5aHVNPC74LlrN6gNiK00Guh1+jOTvomnLWTQL87U9PAsFaQ/fQccYPA6MB/kSbR3HnbkfdUDaH2eJ0/3pe7Ss5I5D8JU=,iv:yhqZpTzsBLSVQm6PktQxCMPlad/SIYw5zjBJ5Bvas44=,tag:6BfXXeR+iA4jC4wR3//amA==,type:str]
 vps_admin_pubkeys:
-    - ENC[AES256_GCM,data:KSWtUoUdaBh7RO6SZtXdD0+PePIApQ1ByDrOPsCAjn7HcvKaoSxq9/j3dlPN6Lht9+eweJGBnskN7b7TeuS+dlZfAzQQT8QjxiWwB9KA+Z4cwpvcn19W6ynT6IPVAKLcVTtjf9M3nLRDcT2LoEldUfBkI9DktqxiQGtRwCHuX3UilEGrTpKdqDaUbbn4,iv:4v2d9+tInZ1OxouSCnR4dGw2aojrY1hTREt+FrVHdkE=,tag:upyEUShrEjfGggFwx1SCVA==,type:str]
-    - ENC[AES256_GCM,data:h85+cepnhLASX6EVeRoi83kL1ScQQcyWaJttA78PAXhUMxOM6Fnud9Fgx/mI2KsK+7SEQrSHbK4nMlJgyzJekNHIK3TIt3yiEzs1ivsDp8zPrpjzxRFp5YI7rFmxaLo7MIChYqcz8DgGTpUrGMNs+oPV0qrmXpvQG+R8qZLjkG5OWUIz4Q1HP3VeVXTEKptzqYgJUrk=,iv:w/8cH6qkhOe30zWjLUt1YPD53+Zb0BMMFrs2CV5AhxE=,tag:X38lmme1CdJLFXQh2gMvmg==,type:str]
+    - ENC[AES256_GCM,data:Pde9uI30GkBgb+gpkGXowhSPM5oSPsjJ51Dbt10qEkk2LChNMmU9Yp2U9kW68erR4HJqgWFYhcdJRg2V0tt5uIVg4wAUGfb8DmEfBf3rbLMxJx6zu2rZyqJxRCLn/N0H2u9KwtRaLjk8HJIXZ/yUpWDimfpNr8imOCaixZE8C4tldmQew5yzHA6XQRQyMDSTTGjNGp2Ze8bxWoBuPQN3eEaO2g==,iv:74OVfMKQvZZsMyBxpBlodQ/9/9oEb8SCay1dZoN97w4=,tag:XGL3H/6N/PfyO38Hb/vK0g==,type:str]
+    - ENC[AES256_GCM,data:B24WyG5ejfyqwmt63tcBcBt6lSlmnISQFSFgkr9oTCe6R+ItRGHHxlJHsiKnD/sUtws8DUWYOumImSsaVbA0cJdzEMSnvYKtcrbPQgHCGNfgEJ1wPume6zgUqqVS/6ZrXivyj5umMaMcPOpfzw7zOXU05PdPbdffgbojWRJgYuqA7xs+7uH7aQzsxWkcqb/hLyds87KGRdJAOEKeKP33dvaxRA==,iv:YXJI6ONoXCXALUeSlxAUIkCfwPIbbpVfqJcLRoRSbeQ=,tag:G+lfv4x1c4tcdHYzKpuKbQ==,type:str]
 #ENC[AES256_GCM,data:u6aVc45pvgpeCqx4cYHiubaBl081b6pv9RzHYaGlPmjCcGI59vDs5OOfRbPnyIyvozRXgZD5djLg+niVGIOhIUo=,iv:oI/eTS3oKph9Ksy/6ZFyLlzJ9KajjoTCdRhUAaOb+TY=,tag:5SAsAxrNsdmpgidbmJO3wQ==,type:comment]
 cloudflare_ssh_hostname: ENC[AES256_GCM,data:bKhoIyV20gKTU+s0NA60lHbWZg==,iv:12bTQJR7BbCNeICQyyx6rpm6ugsOKTXCrYgyPotAAuk=,tag:CW0xCwaNF6vd8nBPq6nVGw==,type:str]
 #ENC[AES256_GCM,data:Cdfxx8EcvdlsU75sE+Yimg2scsZ7i3eU/X+RTNSGqLcE196qHTmaQSAT6Bo5F4LlhudF2wcoUwqggA==,iv:ian4lyKlJH/Lhvp2UzHEZ3gJqjXXZpH54rWHYM1TPqs=,tag:UJKGkfM+p2SsOw659hjcjg==,type:comment]
-ansible_ssh_private_key_file: ENC[AES256_GCM,data:cIDsztQKSfoSwLgzDy1p,iv:r9vfctr5DfSuo6TWxn+Ku/S7GP4ijuCHAJG59XWOHXE=,tag:tW6PbeIVVpz1BqPQGyuIBA==,type:str]
+ansible_ssh_private_key_file: ENC[AES256_GCM,data:ImxhEdpvQCTpJT+IN6tC+9Vd,iv:TZaL/XZ9zfrtJqtqYhdM+opYGU6KkkNtnbpz3SYdGDk=,tag:V29TTE8UQy6UEMAd4G+ZqA==,type:str]
 sops:
     age:
         - enc: |
@@ -35,7 +35,7 @@ sops:
             S4I=
             -----END AGE ENCRYPTED FILE-----
           recipient: age1yubikey1qt2838llhrp5q7gv8zyh3dtm4a49v77c4jzxnwm64lmssa6ndmkqcf98xwf
-    lastmodified: "2026-09-15T18:39:33Z"
-    mac: ENC[AES256_GCM,data:WWkQ0oaRB759QasfwhHOWehYJ3vYlBjpvLHbSXTxLqYaVCOpltE48ITSyRg6SJwSP4mmBGLbpK0XqenHW6Qm0Ri5djJyqsMQa0jUeru/oMIwFIx4WXS716/i2vahjWkkNTN97ARwilIDbWFlLNmzoeGiAhNt9Vjvyr5I9oRthXw=,iv:2v4LEWLfluPwROsmJUxSSiKt9PBL4bRLAlm6zK7JLbM=,tag:MmJ5a/KVwzDSLYhBq5zMQw==,type:str]
+    lastmodified: "2026-09-15T20:44:20Z"
+    mac: ENC[AES256_GCM,data:+AJLSNZfP+JlwVSwF0X0MZXD41I92qfwNoRHe2AHZm5TdWT45S1jFSVfp0jRzL2cG1vfBbKcR8EgtODQukjBJlzIvfgbVmchq6lc5DiL7JDrG+cAappJAg3Ba6tXMFDCIPb4WEHzTppcB5leXzv0UeS1Cs/R4qirmkdloK1+Nlc=,iv:nTY2ZfZ+L3TDHzCa8IqOn2qiNLV5ykmnEp/7LqVaLDw=,tag:7uUq6kv61CAxQwNX6+1ViA==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.3

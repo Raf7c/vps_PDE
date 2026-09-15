@@ -168,6 +168,8 @@ niveau par `just provision`.
 | Clé SSH refusée | `journalctl -u sshd` côté VPS (via console) : shell manquant, `AllowUsers`, contexte SELinux (`restorecon -Rv /home/<user>/.ssh`) |
 | Tunnel définitivement mort | Console web du provider = accès de secours : login `admin` + mot de passe du vault |
 | `Failed to decrypt YubiKey stanza` | PIN pas en cache : `just unlock` d'abord (contexte non-interactif ne peut pas le demander) |
+| `agent refused operation` sur une clé `-sk` | L'agent macOS ne signe pas en FIDO. `ssh -o IdentityAgent=none` ; déjà figé dans `ansible.cfg` |
+| `incorrect passphrase` sur une clé `-sk` | En réalité PIN FIDO2 erroné. `ykman fido info` donne les tentatives restantes : 8 au total, **aucun PUK**, le reset efface les clés résidentes |
 | YubiKey A et B perdues | Secrets irrécupérables (pas de destinataire logiciel) : reconstruire le VPS à neuf, révoquer le tunnel, régénérer tous les secrets |
 
 </details>
