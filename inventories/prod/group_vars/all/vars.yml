@@ -21,6 +21,14 @@ cloud_users_to_remove:
 vps_hostname: vps
 vps_timezone: Europe/Paris
 
+# Services ouverts par défaut dans la zone public de Fedora. Le target DROP ne
+# les couvre pas : un service explicitement autorisé reste joignable. Liste à
+# compléter si une version de Fedora en active un nouveau (`firewall-cmd --list-all`).
+firewalld_services_to_remove:
+  - ssh
+  - dhcpv6-client
+  - mdns
+
 # ── Paquets (dépôts officiels Fedora UNIQUEMENT) ────────────
 base_packages:
   - chrony
@@ -48,6 +56,8 @@ devtools_packages:
   - coreutils    # fournit cat, et les utilitaires GNU de base
   - python3
   - python3-pip
+  - nodejs
+  - npm            # paquet distinct de nodejs chez Fedora
   - tree
 
 # ── Backups restic ───────────────────────────────────────────

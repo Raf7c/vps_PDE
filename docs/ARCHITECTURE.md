@@ -128,9 +128,10 @@ main sur le serveur est effacée au passage suivant.
 ## 6. Environnement de développement (rôle `devtools`)
 
 Liste volontairement minimale, installée par Ansible depuis les dépôts officiels :
-`git`, `gcc`, `make`, `gdb`, `valgrind` (le socle C), `python3`/`python3-pip`,
-`tmux` et `neovim` (travail à distance), `podman` et `toolbox` (installation sans
-root), plus `tar`/`coreutils`. `zsh` est dans les paquets de base (shell de login).
+`git`, `gcc`, `make`, `gdb`, `valgrind` (le socle C), `python3`/`python3-pip` et
+`nodejs`/`npm` (chez Fedora, `npm` est un paquet distinct), `tmux` et `neovim`
+(travail à distance), `podman` et `toolbox` (installation sans root), plus
+`tar`, `coreutils` et `tree`. `zsh` est dans les paquets de base (shell de login).
 Le *linger* systemd est activé pour l'utilisateur de travail (ses services user et
 conteneurs survivent à la déconnexion). Tout besoin ponctuel passe par une toolbox
 ou par un ajout explicite à la liste (`devtools_packages`).

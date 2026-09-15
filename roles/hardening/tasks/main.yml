@@ -15,15 +15,13 @@
     permanent: true
   notify: Reload firewalld
 
-- name: Retirer ssh et dhcpv6-client de la zone public
+- name: Retirer les services ouverts par défaut de la zone public
   ansible.posix.firewalld:
     zone: public
     service: "{{ item }}"
     state: disabled
     permanent: true
-  loop:
-    - ssh
-    - dhcpv6-client
+  loop: "{{ firewalld_services_to_remove }}"
   notify: Reload firewalld
 
 - name: Flush handlers (firewall actif avant de toucher sshd)
