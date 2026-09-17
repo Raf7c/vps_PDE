@@ -1,16 +1,16 @@
 ---
 # Configuration en clair. Les deux autres fichiers de ce dossier sont
-# committés CHIFFRÉS (ansible-vault) et ont chacun leur modèle .example :
-# - private.yml : valeurs identifiantes (utilisateur, clés publiques, hostname)
-# - vault.yml   : secrets (token du tunnel, mots de passe, credentials backup)
+# committés CHIFFRÉS (SOPS/age) et ont chacun leur modèle .example :
+# - private.sops.yml : identifiants (utilisateur, clés publiques, hostname)
+# - vault.sops.yml   : secrets (token du tunnel, mots de passe, credentials backup)
 
 # ── Comptes ──────────────────────────────────────────────────
 # Compte d'administration : wheel (sudo + mot de passe), utilisé uniquement
 # par Ansible et comme secours via la console du provider.
+# NB : ansible_become_password (= vault_vps_admin_password) est défini AU NIVEAU
+# DU PLAY (site.yml, bootstrap play 2), pas ici : au bootstrap play 1 on est
+# connecté en compte cloud (sudo NOPASSWD), et le secret n'y est pas encore chargé.
 vps_admin: admin
-
-# Sudo (BECOME) alimenté depuis le vault → aucune saisie interactive.
-ansible_become_password: "{{ vault_vps_admin_password }}"
 
 # Comptes cloud du provider, supprimés en fin de bootstrap (play 2, connecté
 # en admin) ; le provision refait le contrôle, idempotent.
@@ -20,6 +20,14 @@ cloud_users_to_remove:
 # ── Système ──────────────────────────────────────────────────
 vps_hostname: vps
 vps_timezone: Europe/Paris
+
+# Services ouverts par défaut dans la zone public de Fedora. Le target DROP ne
+# les couvre pas : un service explicitement autorisé reste joignable. Liste à
+# compléter si une version de Fedora en active un nouveau (`firewall-cmd --list-all`).
+firewalld_services_to_remove:
+  - ssh
+  - dhcpv6-client
+  - mdns
 
 # ── Paquets (dépôts officiels Fedora UNIQUEMENT) ────────────
 base_packages:
@@ -32,7 +40,6 @@ base_packages:
 dnf_automatic_package: dnf5-plugin-automatic
 dnf_automatic_timer: dnf5-automatic.timer
 
-# Liste minimale, fidèle à un poste de cursus C :
 # socle (git/gcc/make/gdb/valgrind) + remote (tmux/neovim)
 # + installation sans root (podman/toolbox).
 devtools_packages:
@@ -45,6 +52,13 @@ devtools_packages:
   - neovim
   - podman
   - toolbox
+  - tar
+  - coreutils    # fournit cat, et les utilitaires GNU de base
+  - python3
+  - python3-pip
+  - nodejs
+  - npm            # paquet distinct de nodejs chez Fedora
+  - tree
 
 # ── Backups restic ───────────────────────────────────────────
 restic_paths:

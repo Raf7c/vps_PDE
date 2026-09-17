@@ -15,22 +15,20 @@
     permanent: true
   notify: Reload firewalld
 
-- name: Retirer ssh et dhcpv6-client de la zone public
+- name: Retirer les services ouverts par défaut de la zone public
   ansible.posix.firewalld:
     zone: public
     service: "{{ item }}"
     state: disabled
     permanent: true
-  loop:
-    - ssh
-    - dhcpv6-client
+  loop: "{{ firewalld_services_to_remove }}"
   notify: Reload firewalld
 
 - name: Flush handlers (firewall actif avant de toucher sshd)
   ansible.builtin.meta: flush_handlers
 
 # ── SSHD : n'écoute que sur localhost ──────────────────────────
-# cloudflared proxifie vers localhost:22 — sshd est injoignable
+# cloudflared proxifie vers localhost:22, donc sshd est injoignable
 # autrement, même depuis le réseau local du provider.
 - name: Durcissement sshd (drop-in)
   ansible.builtin.template:

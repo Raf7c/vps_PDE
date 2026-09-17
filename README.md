@@ -31,7 +31,9 @@ flowchart LR
   de toolbox/podman rootless et de `~/bin` pour ses besoins propres.
 - **Secrets matériels** : SOPS chiffre les valeurs vers des clés **age portées par
   YubiKey** (PIN + toucher physique à chaque déchiffrement). Aucun secret racine sur
-  disque ; trois destinataires (2 YubiKeys + 1 clé de secours) pour la résilience.
+  disque ; deux destinataires (YubiKey quotidienne + YubiKey de secours rangée
+  ailleurs), matériels exclusivement. Les mêmes clés portent les accès SSH
+  (`ed25519-sk` résidentes) : un seul objet physique commande tout.
 
 ¹ *Les exemples de cette documentation utilisent `dev`, `example.com` et
 `203.0.113.10` : adapter à vos valeurs (`private.sops.yml`, cf. docs/SETUP.md).*
@@ -52,11 +54,11 @@ et `just provision` (toujours).
 | Commande | Effet |
 |---|---|
 | `just unlock` | déverrouille la YubiKey (PIN) pour la session ; à lancer une fois |
-| `just check` | dry-run (`--check --diff`), systématique avant tout apply |
-| `just provision` | applique l'état complet via le tunnel |
+| `just check [clé]` | dry-run (`--check --diff`), systématique avant tout apply |
+| `just provision [clé]` | applique l'état complet via le tunnel |
 | `just lint` | ansible-lint (profil production) + yamllint |
 | `just vault-edit` / `just private-edit` | éditer secrets / valeurs identifiantes (chiffrés) |
-| `just bootstrap <ip> [user]` | premier provisionnement uniquement |
+| `just bootstrap <ip> [user] [clé]` | premier provisionnement uniquement |
 | `just ping` / `just facts` | connectivité / facts de l'hôte |
 
 ## Structure
@@ -64,7 +66,7 @@ et `just provision` (toujours).
 ```
 inventories/prod/   inventaire + group_vars (vars.yml clair ; private.sops.yml et vault.sops.yml chiffrés SOPS)
 playbooks/          bootstrap.yml (initial) · site.yml (courant)
-roles/              base · cloudflared · hardening · devtools · backup
+roles/              base · accounts · cloudflared · hardening · devtools · backup
 docs/               ARCHITECTURE · SETUP · OPERATIONS · CLIENT-POSTE
 ```
 

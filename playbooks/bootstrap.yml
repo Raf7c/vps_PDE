@@ -3,26 +3,27 @@
 # est exposé. Deux plays : le compte cloud du provider ne sert qu'à créer admin
 # (play 1), puis tout le reste s'exécute en admin (play 2), y compris la
 # suppression du compte cloud en fin de run.
-# Inventaire ad-hoc : les group_vars ne sont pas auto-chargés, d'où le
-# chargement explicite. Les fichiers CHIFFRÉS passent par community.sops.load_vars
-# (exécuté au run) : le --syntax-check de la CI, sans clé, ne les déchiffre jamais.
+#
+# Lancé avec l'inventaire prod (`just bootstrap`) : les group_vars, dont les
+# secrets *.sops.yml, sont chargés par le vars-plugin community.sops AU DÉMARRAGE
+# (contexte interactif : PIN + toucher YubiKey possibles). L'IP publique et la
+# connexion directe (sans tunnel) sont injectées en extra-vars par le justfile.
 
 - name: Bootstrap 1/2, créer le compte d'administration (via le compte cloud)
   hosts: all
   become: true
   gather_facts: false
-  vars_files:
-    - ../inventories/prod/group_vars/all/vars.yml
+  vars:
+    # Compte cloud du provider (fedora, root…), passé par le justfile. Prime sur
+    # l'ansible_user=admin de l'inventaire, car admin n'existe pas encore.
+    ansible_user: "{{ bootstrap_cloud_user }}"
+    # Clé jetable injectée par le provider : les panels d'hébergeur refusent en
+    # général le type ed25519-sk. Portée au play 1 uniquement, donc elle n'a pas
+    # à figurer dans vps_admin_pubkeys et disparaît avec le compte cloud, que la
+    # fin du play 2 supprime.
+    ansible_ssh_private_key_file: "{{ bootstrap_cloud_key }}"
 
   tasks:
-    - name: Charger les variables chiffrées (identifiants + secrets)
-      community.sops.load_vars:
-        file: "{{ item }}"
-      loop:
-        - "{{ playbook_dir }}/../inventories/prod/group_vars/all/private.sops.yml"
-        - "{{ playbook_dir }}/../inventories/prod/group_vars/all/vault.sops.yml"
-      no_log: true
-
     - name: Vérifier que les clés publiques sont définies
       ansible.builtin.assert:
         that:
@@ -54,44 +55,21 @@
     - name: Déployer les clés SSH de {{ vps_admin }}
       ansible.posix.authorized_key:
         user: "{{ vps_admin }}"
-        key: "{{ item }}"
-        exclusive: false
-      loop: "{{ vps_admin_pubkeys }}"
+        key: "{{ vps_admin_pubkeys | join('\n') }}"
+        exclusive: true
 
 - name: Bootstrap 2/2, provisionner et fermer (via admin)
   hosts: all
   become: true
   vars:
-    # Reconnexion avec le compte créé au play 1 : la variable ansible_user
-    # prime sur le -u de la ligne de commande.
+    # Reconnexion avec le compte créé au play 1 : ansible_user prime sur le -u.
     ansible_user: "{{ vps_admin }}"
-  vars_files:
-    - ../inventories/prod/group_vars/all/vars.yml
-
-  pre_tasks:
-    - name: Recharger les variables chiffrées (nouveau play, nouveau contexte)
-      community.sops.load_vars:
-        file: "{{ item }}"
-      loop:
-        - "{{ playbook_dir }}/../inventories/prod/group_vars/all/private.sops.yml"
-        - "{{ playbook_dir }}/../inventories/prod/group_vars/all/vault.sops.yml"
-      no_log: true
-
-    - name: Créer l'utilisateur de travail (AUCUN sudo) {{ vps_user }}
-      ansible.builtin.user:
-        name: "{{ vps_user }}"
-        shell: /usr/bin/zsh
-        password: "!"          # pas de mot de passe : ni login console, ni élévation
-
-    - name: Déployer les clés SSH de {{ vps_user }}
-      ansible.posix.authorized_key:
-        user: "{{ vps_user }}"
-        key: "{{ item }}"
-        exclusive: false
-      loop: "{{ vps_user_pubkeys }}"
+    # sudo d'admin, depuis les secrets SOPS déjà chargés par le vars-plugin.
+    ansible_become_password: "{{ vault_vps_admin_password }}"
 
   roles:
-    - base
+    - base          # doit précéder accounts : fournit le shell zsh du compte de travail
+    - accounts
     - cloudflared
     - hardening
 

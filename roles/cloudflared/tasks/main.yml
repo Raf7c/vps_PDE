@@ -2,7 +2,7 @@
 # SEULE exception à la règle « dépôts officiels Fedora » (voir docs/ARCHITECTURE.md §2.1) :
 # dépôt RPM signé GPG de Cloudflare, clé v2 (2025) épinglée ci-dessous.
 # Le tunnel est « remotely-managed » : créé dans le dashboard Zero Trust,
-# le VPS n'a besoin que du token (vault). Ingress configuré dans le dashboard :
+# le VPS n'a besoin que du token (secrets SOPS). Ingress dans le dashboard :
 #   ssh.<domaine> → ssh://localhost:22   (+ policy Cloudflare Access)
 
 - name: Dépôt Cloudflare (signé GPG)

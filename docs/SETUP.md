@@ -22,8 +22,10 @@ Objectif : un compte Zero Trust avec un tunnel dont seul le **token** nous impor
 1. Compte Cloudflare avec **MFA activé** (il contrôle l'accès au VPS) + domaine
    rattaché (statut *Active* ; DNSSEC désactivé chez le registrar au préalable).
 2. Zero Trust activé (plan Free suffisant).
-3. Un **tunnel** nommé (type *Cloudflared*) → copier le token `eyJ...` dans un
-   gestionnaire de mots de passe (il ira dans le vault en phase 3).
+3. Un **tunnel** nommé (type *Cloudflared*). Le token se lit dans Networking →
+   Tunnels → le tunnel → *Add replica* : c'est la chaîne `eyJ...` de la commande
+   d'installation affichée. Le copier dans un gestionnaire de mots de passe (il
+   ira dans le vault en phase 3).
 4. Un **ingress** : `ssh.example.com` → `ssh://localhost:22`.
 5. Une **application Access** *Self-hosted* sur ce hostname : policy Allow limitée
    à l'adresse e-mail autorisée, session 24 h, *browser rendering* désactivé,
@@ -38,20 +40,32 @@ Vérification :
 ## Phase 2 : Machine de contrôle
 
 ```bash
-# macOS : ansible, lint, just, cloudflared, nmap + chaîne SOPS/age
+# macOS : ansible, lint, just, cloudflared, nmap + chaîne SOPS/age.
+# openssh est requis : le ssh-keygen d'Apple ne gère pas les clés FIDO (-sk).
 brew install ansible ansible-lint yamllint just cloudflared nmap \
-             sops age-plugin-yubikey pre-commit
+             sops age-plugin-yubikey ykman openssh pre-commit
 pre-commit install                              # hooks anti-secrets (gitleaks)
 ansible-galaxy collection install -r requirements.yml
-
-# Une clé SSH par machine cliente
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_laptop -C "dev@laptop"
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519_laptop   # macOS
 ```
 
-Les secrets sont chiffrés avec SOPS vers des clés **age matérielles** (YubiKey) :
-enregistrement des identités dans `~/.config/sops/age/keys.txt` et durcissement
-des clés (PIN, PUK, management key TDES) — voir [OPERATIONS.md](OPERATIONS.md#secrets).
+Une clé SSH **par YubiKey**, résidente dans la puce FIDO2 : le fichier local n'est
+qu'une poignée, inutilisable sans la clé physique. `application` distingue les
+clés lors d'une extraction ultérieure par `ssh-keygen -K` sur une machine neuve.
+
+```bash
+/opt/homebrew/opt/openssh/bin/ssh-keygen -t ed25519-sk \
+  -O resident -O verify-required -O application=ssh:vps \
+  -C "vps@yubikey-a" -f ~/.ssh/vps_sk_a
+```
+
+Répéter avec la seconde YubiKey (`application=ssh:vps-b`, `-f ~/.ssh/vps_sk_b`).
+`verify-required` ajoute le PIN FIDO2 au toucher : deux facteurs par connexion, au
+prix de tout usage non interactif (cron, CI).
+
+Les secrets sont chiffrés avec SOPS vers des clés **age matérielles**, portées par
+les mêmes YubiKeys dans leur slot PIV : enregistrement des identités dans
+`~/.config/sops/age/keys.txt` et durcissement des clés (PIN, PUK, management key
+TDES), voir [OPERATIONS.md](OPERATIONS.md#secrets).
 
 Vérification :
 
@@ -59,7 +73,7 @@ Vérification :
 
 ## Phase 3 : Configuration du repo
 
-Les destinataires de chiffrement (recipients des YubiKeys + clé de secours) sont
+Les destinataires de chiffrement (recipients des deux YubiKeys) sont
 déclarés dans `.sops.yaml`. Créer les deux fichiers depuis leurs modèles, les
 remplir, puis les chiffrer avec SOPS :
 
@@ -88,14 +102,21 @@ Vérification :
 > Chaque session : `just unlock` une fois (saisit le PIN, mis en cache tant que
 > la YubiKey reste branchée). Les commandes suivantes ne demandent que le toucher.
 
-Prérequis : VPS Fedora joignable sur son IP publique, avec la clé de la machine de
-contrôle autorisée (sinon `ssh-copy-id` au préalable).
+Prérequis : VPS Fedora joignable sur son IP publique, avec une clé autorisée sur le
+compte cloud. Les panels d'hébergeur refusent en général le type `ed25519-sk`, d'où
+une clé logicielle jetable, utilisée par le seul play 1 et disparaissant avec le
+compte cloud que le play 2 supprime.
 
 ```bash
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/vps_tmp -C "temporaire-bootstrap"
+# déclarer ~/.ssh/vps_tmp.pub dans le panel du provider, puis :
+
 # Image cloud avec user sudo (ex. OVH → "fedora") :
 just bootstrap 203.0.113.10 fedora
 # Provider avec login root direct :
 just bootstrap 203.0.113.10
+# Autre chemin pour la clé jetable (défaut : ~/.ssh/vps_tmp) :
+just bootstrap 203.0.113.10 fedora ~/.ssh/autre
 ```
 
 Deux plays dans le même run : le compte cloud du provider sert uniquement à
@@ -119,9 +140,18 @@ Vérification :
 Host vps
   HostName ssh.example.com
   User dev
-  IdentityFile ~/.ssh/id_ed25519_laptop
+  IdentityFile ~/.ssh/vps_sk_a
+  IdentityFile ~/.ssh/vps_sk_b
+  IdentitiesOnly yes
   ProxyCommand cloudflared access ssh --hostname %h
 ```
+
+Les deux `IdentityFile` laissent ssh retenir celle dont la YubiKey est branchée.
+Ansible, lui, reste explicite : la clé quotidienne vient de `private.sops.yml`,
+celle de secours se passe en argument (`just provision ~/.ssh/vps_sk_b`).
+
+Une fois le bootstrap validé, supprimer la clé jetable (`rm ~/.ssh/vps_tmp*`) et
+la retirer du panel du provider.
 
 ## Phase 5 : Provisionnement complet
 

@@ -11,16 +11,26 @@ unlock:
     @sops decrypt inventories/prod/group_vars/all/vault.sops.yml > /dev/null && echo "YubiKey déverrouillée pour la session."
 
 # Premier provisionnement, via l'IP publique du provider (une seule fois).
-# Usage : just bootstrap 203.0.113.10           (login root direct)
-#         just bootstrap 203.0.113.10 fedora    (image OVH : user fedora + sudo)
-bootstrap ip user="root":
-    ansible-playbook playbooks/bootstrap.yml -i '{{ ip }},' -u {{ user }}
+# Usage : just bootstrap 203.0.113.10                        (login root direct)
+#         just bootstrap 203.0.113.10 fedora                 (image OVH : user fedora + sudo)
+#         just bootstrap 203.0.113.10 fedora ~/.ssh/autre    (autre clé jetable)
+# Inventaire prod (→ secrets SOPS chargés par le vars-plugin), mais on force
+# l'IP publique et la connexion directe (le tunnel n'existe pas encore).
+# La clé jetable ne sert qu'au play 1 : voir le commentaire dans bootstrap.yml.
+bootstrap ip user="root" key="~/.ssh/vps_tmp":
+    ansible-playbook playbooks/bootstrap.yml \
+      -i inventories/prod/hosts.yml \
+      -e ansible_host={{ ip }} -e ansible_ssh_common_args='' \
+      -e bootstrap_cloud_user={{ user }} \
+      -e bootstrap_cloud_key={{ key }}
 
-provision:
-    ansible-playbook playbooks/site.yml
+# Sans argument : la clé déclarée dans private.sops.yml (YubiKey quotidienne).
+# Avec la YubiKey de secours :  just provision ~/.ssh/vps42_bis_sk
+provision key="":
+    ansible-playbook playbooks/site.yml {{ if key == "" { "" } else { "-e ansible_ssh_private_key_file=" + key } }}
 
-check:
-    ansible-playbook playbooks/site.yml --check --diff
+check key="":
+    ansible-playbook playbooks/site.yml --check --diff {{ if key == "" { "" } else { "-e ansible_ssh_private_key_file=" + key } }}
 
 lint:
     ansible-lint --offline

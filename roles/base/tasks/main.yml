@@ -27,12 +27,12 @@
     mode: "0644"
   notify: Restart journald
 
-- name: Mises à jour automatiques — plugin dnf
+- name: Mises à jour automatiques, plugin dnf
   ansible.builtin.dnf:
     name: "{{ dnf_automatic_package }}"
     state: present
 
-- name: Mises à jour automatiques — appliquer les correctifs de sécurité
+- name: Mises à jour automatiques, appliquer les correctifs de sécurité
   community.general.ini_file:
     path: /etc/dnf/automatic.conf
     section: commands
@@ -44,7 +44,7 @@
     - {option: apply_updates, value: "yes"}
     - {option: reboot, value: when-needed}
 
-- name: Mises à jour automatiques — timer activé
+- name: Mises à jour automatiques, timer activé
   ansible.builtin.systemd:
     name: "{{ dnf_automatic_timer }}"
     state: started
